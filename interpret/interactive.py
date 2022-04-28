@@ -27,10 +27,14 @@ class InteractiveShell:
 
     def print(self, *words, end="\n", sep=" "):
         print(*words, end=end, sep=sep, file=self.stdout)
+        self.stdout.flush()
 
     def interactive_session(self, prompt: str = ">> ") -> NoReturn:
         while True:
-            equation = self._take_input(prompt).strip()
+            try:
+                equation = self._take_input(prompt).strip()
+            except KeyboardInterrupt:
+                return
 
             if equation in self.exit_commands:
                 return
