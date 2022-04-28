@@ -1,3 +1,5 @@
+from sys import argv
+
 from interpret import interactive, interpreter
 
 PROMPT = ">> "
@@ -9,11 +11,19 @@ CTX = {
 }
 
 
-def main():
+def interactive_mode():
     calculator = interpreter.Calculator(ctx=CTX)
     shell = interactive.InteractiveShell(calculator)
     shell.interactive_session(prompt=PROMPT)
 
 
+def expr_exec_mode(expr: str):
+    calculator = interpreter.Calculator(ctx=CTX)
+    print(calculator.execute(expr))
+
+
 if __name__ == '__main__':
-    main()
+    if len(argv) >= 3 and argv[1] in ("-c", "--calculate"):
+        expr_exec_mode("".join(argv[2:]))
+    else:
+        interactive_mode()
