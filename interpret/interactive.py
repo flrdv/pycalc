@@ -22,8 +22,7 @@ class InteractiveShell:
     def _take_input(self, prompt: str) -> str:
         self.print(prompt, end="")
 
-        for line in self.stdin:
-            return line
+        return self.stdin.readline()
 
     def print(self, *words, end="\n", sep=" "):
         print(*words, end=end, sep=sep, file=self.stdout)
