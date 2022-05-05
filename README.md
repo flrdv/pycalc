@@ -19,3 +19,8 @@ $ python3 shell.py -c "40+2"
 42
 ```
 
+# How to use it?
+I personally allow you to use: integers, floats, constants, and functions. For example:
+```
+40 + rt(25, 5) - pi + 0.14
+```
