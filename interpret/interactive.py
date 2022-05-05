@@ -25,8 +25,7 @@ class InteractiveShell:
         return self.stdin.readline()
 
     def print(self, *words, end="\n", sep=" "):
-        print(*words, end=end, sep=sep, file=self.stdout)
-        self.stdout.flush()
+        print(*words, end=end, sep=sep, file=self.stdout, flush=True)
 
     def interactive_session(self, prompt: str = ">> ") -> NoReturn:
         while True:
