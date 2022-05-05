@@ -45,13 +45,6 @@ class BinOp(Node):
         ))
 
     def _perform_op(self, left: Token, right: Token) -> float:
-        if self.op.type == TokenType.OP_POW:
-            print("Hello here!")
-            # right and left tokens are already performed
-            right_value = _get_unarized_value(right.value, right.unary)
-
-            return _get_unarized_value(left.value ** right_value, left.unary)
-
         return self._ops_performers[self.op.type](
             _get_unarized_value(left.value, left.unary),
             _get_unarized_value(right.value, right.unary)
