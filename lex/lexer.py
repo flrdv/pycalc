@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Optional
 
 from tokentypes.tokens import Lexeme, Lexemes
 from tokentypes.types import LexemeType, OPERATORS_TABLE, ALLOWED_LITERALS
@@ -51,6 +51,10 @@ class Lexer(ABCLexer):
 
             typeofchar = get_char_type(char)
 
+            if typeofchar is None:
+                self._clear()
+                raise TypeError("disallowed char: " + char)
+
             if typeofchar != self.state or typeofchar in self.LEXER_SAME_TOKENS_EXCEPTIONS:
                 if not (self.state == LexemeType.LITERAL and typeofchar == LexemeType.NUMBER) and \
                         not (self.state == LexemeType.NUMBER and typeofchar == LexemeType.DOT):
@@ -68,13 +72,16 @@ class Lexer(ABCLexer):
             value="".join(self.tempbuf)
         ))
 
-        self.state = LexemeType.UNKNOWN
-        self.tempbuf.clear()
+        self._clear()
 
         return lexemes
 
+    def _clear(self):
+        self.state = LexemeType.UNKNOWN
+        self.tempbuf.clear()
 
-def get_char_type(char: str) -> LexemeType:
+
+def get_char_type(char: str) -> Optional[LexemeType]:
     if char == '(':
         return LexemeType.LBRACE
     elif char == ')':
@@ -89,8 +96,6 @@ def get_char_type(char: str) -> LexemeType:
         return LexemeType.OPERATOR
     elif char in ALLOWED_LITERALS:
         return LexemeType.LITERAL
-
-    raise TypeError("disallowed char: " + char)
 
 
 def _is_number(string: str) -> int:
