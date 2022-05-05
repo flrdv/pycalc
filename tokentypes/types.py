@@ -25,17 +25,15 @@ class TokenType(enum.IntEnum):
     OP_SUB = 32
     OP_DIV = 64
     OP_MUL = 128
-    OP_POW = 256
-    COMMA = 512
+    COMMA = 256
 
 
-OPERATOR = TokenType.OP_ADD | TokenType.OP_SUB | TokenType.OP_DIV | TokenType.OP_MUL | TokenType.OP_POW
+OPERATOR = TokenType.OP_ADD | TokenType.OP_SUB | TokenType.OP_DIV | TokenType.OP_MUL
 OPERATORS_TABLE = {
     "+": TokenType.OP_ADD,
     "-": TokenType.OP_SUB,
     "/": TokenType.OP_DIV,
     "*": TokenType.OP_MUL,
-    "^": TokenType.OP_POW
 }
 
 
@@ -50,5 +48,4 @@ PRIORITIES_TABLE = {
     TokenType.OP_SUB:   Priorities.MINIMAL,
     TokenType.OP_DIV:   Priorities.MEDIUM,
     TokenType.OP_MUL:   Priorities.MEDIUM,
-    TokenType.OP_POW:   Priorities.HIGH,
 }
