@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict, Union
+from typing import List, Dict, Union
 
 from . import types
 
@@ -11,7 +11,7 @@ TokenValue = Union[float, str, Tokens, "FuncCall"]
 class Lexeme:
     """
     A class that contains a raw piece of input stream.
-    It may be: number, operator, lbrace, rbrace
+    It may be: number, literal, operator, lbrace, rbrace
     """
 
     def __init__(self, typeof: types.LexemeType, value: str):
@@ -26,16 +26,16 @@ class Lexeme:
 
 class Token:
     def __init__(self,
+                 kind: types.TokenKind,
                  typeof: types.TokenType,
                  value: TokenValue,
-                 unary: Optional[types.TokenType]
                  ):
+        self.kind = kind
         self.type = typeof
         self.value = value
-        self.unary = unary
 
     def __str__(self):
-        return f"Token(type={self.type.name}, value={repr(self.value)}, unary={repr(self.unary)})"
+        return f"Token(kind={self.kind.name}, type={self.type.name}, value={repr(self.value)})"
 
     __repr__ = __str__
 
