@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pycalc.lex.lexer import Lexer, ABCLexer
+from pycalc.lex.tokenizer import Lexer, ABCLexer
 from pycalc.interpret.ast import AST, Node, ABCAbstractSyntaxTree
 from pycalc.tokentypes.tokens import Context
 from pycalc.semantic.semantizer import Semantizer, ABCSemantizer
