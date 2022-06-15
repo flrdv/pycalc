@@ -2,7 +2,7 @@ import string
 from operator import add
 from functools import reduce
 from abc import ABC, abstractmethod
-from typing import List, Optional, Iterator, Tuple, Callable
+from typing import List, Iterator, Tuple, Callable
 
 from pycalc.tokentypes.tokens import Lexeme, Lexemes
 from pycalc.tokentypes.types import LexemeType, OPERATORS_TABLE
@@ -28,12 +28,20 @@ class Tokenizer(ABCTokenizer):
     def _lex(data: str) -> Iterator[Tuple[str, bool]]:
         buff: List[str] = [data[0]]
         operators_chars = set(reduce(add, OPERATORS_TABLE.keys()))
-        # True is operator, False is not operator
-        state = data[0] in operators_chars
+
+        if data[0] == "(":
+            yield "(", False
+            buff.clear()
+            state = False
+        else:
+            # True is operator, False is not operator
+            state = data[0] in operators_chars
 
         for char in data[1:]:
             if char in "()":
-                yield "".join(buff), state
+                if buff:
+                    yield "".join(buff), state
+
                 yield char, False
                 buff = []
             elif (char in operators_chars) + state == 1:
