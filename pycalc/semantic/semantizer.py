@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
 from typing import Optional, List
 
-from tokentypes.tokens import Token, Tokens, Lexeme, Lexemes, FuncCall
-from tokentypes.types import (LexemeType, TokenType, UNARY_OPERATORS,
-                              OPERATORS_TABLE, OPERATOR)
+from pycalc.tokentypes.tokens import Token, Tokens, Lexeme, Lexemes, FuncCall
+from pycalc.tokentypes.types import (LexemeType, TokenType, UNARY_OPERATORS,
+                                     OPERATORS_TABLE, OPERATOR)
 
 
 class ABCSemantizer(ABC):

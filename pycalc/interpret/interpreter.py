@@ -1,9 +1,9 @@
 from typing import Optional
 
-from lex.lexer import Lexer, ABCLexer
-from interpret.ast import AST, Node, ABCAbstractSyntaxTree
-from tokentypes.tokens import Context
-from semantic.semantizer import Semantizer, ABCSemantizer
+from pycalc.lex.lexer import Lexer, ABCLexer
+from pycalc.interpret.ast import AST, Node, ABCAbstractSyntaxTree
+from pycalc.tokentypes.tokens import Context
+from pycalc.semantic.semantizer import Semantizer, ABCSemantizer
 
 
 class Calculator:

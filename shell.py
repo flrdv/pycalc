@@ -1,6 +1,6 @@
 from sys import argv
 
-from interpret import interactive, interpreter
+from pycalc.interpret import interactive, interpreter
 
 PROMPT = ">> "
 CTX = {

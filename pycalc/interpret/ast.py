@@ -1,8 +1,8 @@
 from typing import List, Iterable
 from abc import ABC, abstractmethod
 
-from tokentypes.tokens import Token, Tokens, Context
-from tokentypes.types import OPERATOR, PRIORITIES_TABLE, TokenType
+from pycalc.tokentypes.tokens import Token, Tokens, Context
+from pycalc.tokentypes.types import OPERATOR, PRIORITIES_TABLE, TokenType
 
 
 class Node(ABC):

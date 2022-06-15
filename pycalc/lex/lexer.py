@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
 
-from tokentypes.tokens import Lexeme, Lexemes
-from tokentypes.types import LexemeType, OPERATORS_TABLE, ALLOWED_LITERALS
+from pycalc.tokentypes.tokens import Lexeme, Lexemes
+from pycalc.tokentypes.types import LexemeType, OPERATORS_TABLE, ALLOWED_LITERALS
 
 
 class ABCLexer(ABC):

@@ -44,8 +44,8 @@ class Priorities(enum.IntEnum):
 
 
 PRIORITIES_TABLE = {
-    TokenType.OP_ADD:   Priorities.MINIMAL,
-    TokenType.OP_SUB:   Priorities.MINIMAL,
-    TokenType.OP_DIV:   Priorities.MEDIUM,
-    TokenType.OP_MUL:   Priorities.MEDIUM,
+    TokenType.OP_ADD: Priorities.MINIMAL,
+    TokenType.OP_SUB: Priorities.MINIMAL,
+    TokenType.OP_DIV: Priorities.MEDIUM,
+    TokenType.OP_MUL: Priorities.MEDIUM,
 }
