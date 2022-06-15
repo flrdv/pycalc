@@ -27,6 +27,7 @@ class TokenKind(enum.IntEnum):
 
 
 class TokenType(enum.IntEnum):
+    NUMBER = -1
     OP_EQ = 0
     OP_EQEQ = 1
     OP_NOTEQ = 2
@@ -48,7 +49,9 @@ class TokenType(enum.IntEnum):
     COMMA = 18
     FUNCCALL = 19
     FUNCDECL = 20
-    VARDECL = 21
+    VAR = 21
+    VARDECL = 22
+    BRACE_EXPR = 23
 
 
 OPERATORS_TABLE = {
