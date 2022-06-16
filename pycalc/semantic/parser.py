@@ -26,9 +26,9 @@ class Parser(ABCParser):
 
         tokens = self._parse_braces(lexemes)
         unary = self._parse_unary(tokens)
-        # funcs = self._parse_functions(unary)
+        funcs = self._parse_functions(unary)
 
-        return unary
+        return funcs
 
     def _parse_braces(self, lexemes: Lexemes) -> Tokens:
         result: Tokens = []
@@ -78,7 +78,10 @@ class Parser(ABCParser):
                 token.value = self._parse_unary(token.value)
 
             if state == _UnaryParseState.operator:
-                if token.kind != TokenKind.OPERATOR:
+                if token.kind == TokenKind.BRACE_EXPR:
+                    result.append(token)
+                    continue
+                elif token.kind != TokenKind.OPERATOR:
                     raise SyntaxError("invalid expression")
 
                 result.append(token)
@@ -95,7 +98,7 @@ class Parser(ABCParser):
                         buff.clear()
 
                     result.append(token)
-                    state = _UnaryParseState.token
+                    state = _UnaryParseState.operator
                 else:
                     buff.append(token)
             elif state == _UnaryParseState.token:
@@ -122,6 +125,55 @@ class Parser(ABCParser):
 
         # hehe, pretty tricky, isn't it?
         return TokenType.UN_NEG if subs & 1 else TokenType.UN_POS
+
+    def _parse_functions(self, tokens: Tokens) -> Tokens:
+        if len(tokens) == 2 and \
+                _get_token_types(tokens) == [TokenType.VAR, TokenType.BRACE_EXPR]:
+            return [Token(
+                kind=TokenKind.FUNC,
+                typeof=TokenType.FUNCCALL,
+                value=FuncCall(
+                    name=tokens[0].value,
+                    args=self._split_args(tokens[1].value)
+                )
+            )]
+
+        result: Tokens = [tokens[0]]
+        skip = False
+
+        for i, token in enumerate(tokens[1:], start=1):
+            if skip:
+                skip = False
+                continue
+
+            if token.type == TokenType.BRACE_EXPR and \
+                    tokens[i - 1].type == TokenType.VAR:
+                funcname = result.pop()
+                result.append(Token(
+                    kind=TokenKind.FUNC,
+                    typeof=TokenType.FUNCCALL,
+                    value=FuncCall(
+                        name=funcname.value,
+                        args=self._split_args(token.value)
+                    )
+                ))
+                skip = True
+            else:
+                result.append(token)
+
+        return result
+
+    @staticmethod
+    def _split_args(args: Tokens) -> List[Tokens]:
+        clear_args: List[Tokens] = [[]]
+
+        for index, token in enumerate(args):
+            if token.type == TokenType.OP_COMMA:
+                clear_args.append([])
+            else:
+                clear_args[-1].append(token)
+
+        return clear_args
 
 
 def _lexeme2token(lexeme: Lexeme) -> Token:
@@ -151,3 +203,7 @@ def _lexeme2token(lexeme: Lexeme) -> Token:
         )
 
     raise SyntaxError("unexpected lexeme type: " + lexeme.type.name)
+
+
+def _get_token_types(tokens: Tokens) -> List[TokenType]:
+    return list(token.type for token in tokens)
