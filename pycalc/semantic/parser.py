@@ -1,3 +1,4 @@
+import enum
 from abc import ABC, abstractmethod
 from typing import Optional, List
 
@@ -12,16 +13,22 @@ class ABCParser(ABC):
         ...
 
 
+class _UnaryParseState(enum.IntEnum):
+    operator = 1
+    unary = 2
+    token = 3
+
+
 class Parser(ABCParser):
     def parse(self, lexemes: Lexemes) -> Tokens:
         if not lexemes:
             return []
 
         tokens = self._parse_braces(lexemes)
-        # unary = self._perform_unary(tokens)
-        # funcs = self._perform_functions(unary)
+        unary = self._parse_unary(tokens)
+        # funcs = self._parse_functions(unary)
 
-        return tokens
+        return unary
 
     def _parse_braces(self, lexemes: Lexemes) -> Tokens:
         result: Tokens = []
@@ -54,6 +61,49 @@ class Parser(ABCParser):
 
         if buff or opened_braces:
             raise SyntaxError("unclosed brace")
+
+        return result
+
+    def _parse_unary(self, tokens: Tokens) -> Tokens:
+        result: Tokens = []
+        buff: Tokens = []
+
+        if tokens[0].kind == TokenKind.OPERATOR:
+            state = _UnaryParseState.unary
+        else:
+            state = _UnaryParseState.token
+
+        for token in tokens:
+            if token.kind == TokenKind.BRACE_EXPR:
+                token.value = self._parse_unary(token.value)
+
+            if state == _UnaryParseState.operator:
+                if token.kind != TokenKind.OPERATOR:
+                    raise SyntaxError("invalid expression")
+
+                result.append(token)
+                state = _UnaryParseState.unary
+            elif state == _UnaryParseState.unary:
+                if token.kind != TokenKind.OPERATOR:
+                    if buff:
+                        unary = self._calculate_final_unary(buff)
+                        result.append(Token(
+                            kind=TokenKind.UNARY_OPERATOR,
+                            typeof=unary,
+                            value="+" if unary == TokenType.UN_POS else "-"
+                        ))
+                        buff.clear()
+
+                    result.append(token)
+                    state = _UnaryParseState.token
+                else:
+                    buff.append(token)
+            elif state == _UnaryParseState.token:
+                result.append(token)
+                state = _UnaryParseState.operator
+
+        if buff or state == _UnaryParseState.unary:
+            raise SyntaxError("incomplete expression")
 
         return result
 
