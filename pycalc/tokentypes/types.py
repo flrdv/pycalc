@@ -44,9 +44,9 @@ class TokenType(enum.IntEnum):
     OP_MOD = 13
     OP_FLOORDIV = 14
     OP_SEMICOLON = 15
+    OP_COMMA = 18
     UN_POS = 16
     UN_NEG = 17
-    COMMA = 18
     FUNCCALL = 19
     FUNCDECL = 20
     VAR = 21
@@ -72,7 +72,8 @@ OPERATORS_TABLE = {
     "!=": TokenType.OP_NOTEQ,
 
     ";": TokenType.OP_SEMICOLON,
-    "=": TokenType.OP_EQ
+    "=": TokenType.OP_EQ,
+    ",": TokenType.OP_COMMA
 }
 
 
@@ -104,5 +105,6 @@ PRIORITIES_TABLE = {
     TokenType.OP_EQ:        Priorities.NONE,
     TokenType.OP_EQEQ:      Priorities.NONE,
     TokenType.OP_NOTEQ:     Priorities.NONE,
+    TokenType.OP_COMMA:     Priorities.NONE,
     TokenType.OP_SEMICOLON: Priorities.NONE,
 }
