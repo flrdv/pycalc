@@ -1,11 +1,10 @@
-from typing import List, Dict, Union
+from typing import List, Union
 
 from . import types
 
 Lexemes = List["Lexeme"]
 Tokens = List["Token"]
-Context = Dict[str, Union[int, callable]]
-TokenValue = Union[float, str, Tokens]
+TokenValue = Union[int, float, str, "Func"]
 
 
 class Lexeme:
@@ -36,5 +35,16 @@ class Token:
 
     def __str__(self):
         return f"Token(kind={self.kind.name}, type={self.type.name}, value={repr(self.value)})"
+
+    __repr__ = __str__
+
+
+class Func:
+    def __init__(self, name: str, argscount: int):
+        self.name = name
+        self.argscount = argscount
+
+    def __str__(self):
+        return f"Func(name={repr(self.name)}, argscount={self.argscount})"
 
     __repr__ = __str__
