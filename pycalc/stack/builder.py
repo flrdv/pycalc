@@ -46,17 +46,16 @@ class SortingStationBuilder(ABCBuilder):
                     else:
                         output.append(token)
                 elif token.type == TokenType.OP_COMMA:
-                    print(token)
-
                     try:
                         while stack.top.type != TokenType.LBRACE:
                             output.append(stack.pop())
                     except IndexError:
                         raise SyntaxError("missing opening brace or comma") from None
-                elif token.kind == TokenKind.OPERATOR:
+                elif token.kind in (TokenKind.OPERATOR, TokenKind.UNARY_OPERATOR):
                     priority = PRIORITIES_TABLE
+                    token_priority = priority[token.type]
 
-                    while stack and priority[stack.top.type] >= priority[token.type]:
+                    while stack and token_priority <= priority[stack.top.type]:
                         output.append(stack.pop())
 
                     stack.append(token)
