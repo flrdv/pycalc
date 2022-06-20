@@ -23,6 +23,7 @@ class TokenKind(enum.IntEnum):
     OPERATOR = 2
     UNARY_OPERATOR = 3
     BRACE = 4
+    FUNC = 5
 
 
 class TokenType(enum.IntEnum):
@@ -43,12 +44,13 @@ class TokenType(enum.IntEnum):
     OP_MOD = 13
     OP_FLOORDIV = 14
     OP_SEMICOLON = 15
-    OP_COMMA = 18
-    UN_POS = 16
-    UN_NEG = 17
-    LBRACE = 18
-    RBRACE = 19
-    VAR = 20
+    OP_COMMA = 16
+    UN_POS = 17
+    UN_NEG = 18
+    LBRACE = 19
+    RBRACE = 20
+    VAR = 21
+    FUNCCALL = 22
 
 
 OPERATORS_TABLE = {
