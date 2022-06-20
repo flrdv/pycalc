@@ -190,6 +190,11 @@ class Tokenizer(ABCTokenizer):
 
     @staticmethod
     def _lexeme2token(lexeme: Lexeme) -> Token:
+        braces = {
+            LexemeType.LBRACE: TokenType.LBRACE,
+            LexemeType.RBRACE: TokenType.RBRACE
+        }
+
         if lexeme.type == LexemeType.NUMBER:
             return Token(
                 kind=TokenKind.NUMBER,
@@ -212,6 +217,12 @@ class Tokenizer(ABCTokenizer):
             return Token(
                 kind=TokenKind.OPERATOR,
                 typeof=OPERATORS_TABLE[lexeme.value],
+                value=lexeme.value
+            )
+        elif lexeme.type in braces:
+            return Token(
+                kind=TokenKind.BRACE,
+                typeof=braces[lexeme.type],
                 value=lexeme.value
             )
 
