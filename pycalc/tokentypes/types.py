@@ -87,19 +87,22 @@ class Priorities(enum.IntEnum):
 PRIORITIES_TABLE = {
     TokenType.OP_ADD:      Priorities.MINIMAL,
     TokenType.OP_SUB:      Priorities.MINIMAL,
-    TokenType.OP_DIV:      Priorities.MEDIUM,
-    TokenType.OP_FLOORDIV: Priorities.MEDIUM,
-    TokenType.OP_MUL:      Priorities.MEDIUM,
-    TokenType.UN_POS:      Priorities.HIGH,
-    TokenType.UN_NEG:      Priorities.HIGH,
-    TokenType.OP_POW:      Priorities.MAXIMAL,
 
+    TokenType.OP_DIV:         Priorities.MEDIUM,
+    TokenType.OP_FLOORDIV:    Priorities.MEDIUM,
+    TokenType.OP_MUL:         Priorities.MEDIUM,
     TokenType.OP_MOD:         Priorities.MEDIUM,
     TokenType.OP_LSHIFT:      Priorities.MEDIUM,
     TokenType.OP_RSHIFT:      Priorities.MEDIUM,
     TokenType.OP_BITWISE_AND: Priorities.MEDIUM,
     TokenType.OP_BITWISE_OR:  Priorities.MEDIUM,
     TokenType.OP_BITWISE_XOR: Priorities.MEDIUM,
+
+    TokenType.UN_POS: Priorities.HIGH,
+    TokenType.UN_NEG: Priorities.HIGH,
+
+    TokenType.OP_POW:   Priorities.MAXIMAL,
+    TokenType.FUNCCALL: Priorities.MAXIMAL,
 
     TokenType.OP_EQ:        Priorities.NONE,
     TokenType.OP_EQEQ:      Priorities.NONE,
