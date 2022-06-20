@@ -20,10 +20,9 @@ class LexemeType(enum.IntEnum):
 class TokenKind(enum.IntEnum):
     NUMBER = 0
     LITERAL = 1
-    BRACE_EXPR = 2
-    OPERATOR = 3
-    UNARY_OPERATOR = 4
-    FUNC = 5
+    OPERATOR = 2
+    UNARY_OPERATOR = 3
+    BRACE = 4
 
 
 class TokenType(enum.IntEnum):
@@ -47,11 +46,9 @@ class TokenType(enum.IntEnum):
     OP_COMMA = 18
     UN_POS = 16
     UN_NEG = 17
-    FUNCCALL = 19
-    FUNCDECL = 20
-    VAR = 21
-    VARDECL = 22
-    BRACE_EXPR = 23
+    LBRACE = 18
+    RBRACE = 19
+    VAR = 20
 
 
 OPERATORS_TABLE = {
