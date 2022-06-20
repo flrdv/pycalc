@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Iterator, List
 
-from pycalc.tokentypes.tokens import Token, Tokens
+from pycalc.tokentypes.tokens import Token, Tokens, Func
 from pycalc.tokentypes.types import PRIORITIES_TABLE, TokenKind, TokenType
 
 
@@ -40,19 +40,19 @@ class SortingStationBuilder(ABCBuilder):
                 if token.type == TokenType.NUMBER:
                     output.append(token)
                 elif token.type == TokenType.VAR:
-                    if expr[i+1].type == TokenType.LBRACE:
+                    if i < len(expr)-1 and expr[i+1].type == TokenType.LBRACE:
                         # it's a function!
-                        stack.append(token)
-                        output.append(Token(
-                            kind=TokenKind.NUMBER,
-                            typeof=TokenType.NUMBER,
-                            value=args_counters.pop()
-                        ))
+                        stack.append(self._get_func(token, args_counters.pop()))
                     else:
                         output.append(token)
                 elif token.type == TokenType.OP_COMMA:
-                    while stack.top.type != TokenType.LBRACE:
-                        output.append(stack.pop())
+                    print(token)
+
+                    try:
+                        while stack.top.type != TokenType.LBRACE:
+                            output.append(stack.pop())
+                    except IndexError:
+                        raise SyntaxError("missing opening brace or comma") from None
                 elif token.kind == TokenKind.OPERATOR:
                     priority = PRIORITIES_TABLE
 
@@ -63,17 +63,17 @@ class SortingStationBuilder(ABCBuilder):
                 elif token.type == TokenType.LBRACE:
                     stack.append(token)
                 elif token.type == TokenType.RBRACE:
-                    while stack.top.type != TokenType.LBRACE:
-                        output.append(stack.pop())
-
-                    if not stack:
-                        raise SyntaxError("missing opening brace")
+                    try:
+                        while stack and stack.top.type != TokenType.LBRACE:
+                            output.append(stack.pop())
+                    except IndexError:
+                        raise SyntaxError("missing opening brace") from None
 
                     stack.pop()
 
                     if stack.top.type == TokenType.VAR:
                         # it's a function!
-                        output.append(stack.pop())
+                        output.append(self._get_func(stack.pop(), args_counters.pop()))
 
             while stack:
                 if stack.top.type == TokenType.LBRACE:
@@ -83,7 +83,7 @@ class SortingStationBuilder(ABCBuilder):
 
             output.append(semicolon)
 
-        return output
+        return output[:-1]  # remove trailing semicolon
 
     def _count_args(self, tokens: Tokens) -> List[int]:
         result = []
@@ -135,3 +135,14 @@ class SortingStationBuilder(ABCBuilder):
                 border = i + 1
 
         yield expr[border:]
+
+    @staticmethod
+    def _get_func(token: Token, argscount: int) -> Token:
+        return Token(
+            kind=TokenKind.FUNC,
+            typeof=TokenType.FUNCCALL,
+            value=Func(
+                name=token.value,
+                argscount=argscount
+            )
+        )
