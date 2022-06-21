@@ -32,6 +32,25 @@ def tokenize(data: str) -> Tokens:
 
 
 class Tokenizer(ABCTokenizer):
+    def tokenize(self, data: str) -> Tokens:
+        if not data:
+            return []
+
+        lexemes: Lexemes = []
+
+        for element, is_op in self._lex(data):
+            if is_op:
+                op, unaries = self._parse_ops(element)
+                lexemes.append(op)
+                lexemes.extend(unaries)
+            else:
+                lexemes.append(self._parse_lexeme(element))
+
+        unary = self._parse_unary(list(map(self._lexeme2token, lexemes)))
+        vardecls = self._parse_vardecls(unary)
+
+        return vardecls
+
     @staticmethod
     def _lex(data: str) -> Iterator[Tuple[str, bool]]:
         buff: List[str] = [data[0]]
@@ -116,22 +135,6 @@ class Tokenizer(ABCTokenizer):
         # hehe, pretty tricky, isn't it?
         return TokenType.UN_NEG if subs & 1 else TokenType.UN_POS
 
-    def tokenize(self, data: str) -> Tokens:
-        if not data:
-            return []
-
-        lexemes: Lexemes = []
-
-        for element, is_op in self._lex(data):
-            if is_op:
-                op, unaries = self._parse_ops(element)
-                lexemes.append(op)
-                lexemes.extend(unaries)
-            else:
-                lexemes.append(self._parse_lexeme(element))
-
-        return self._parse_unary(list(map(self._lexeme2token, lexemes)))
-
     def _parse_ops(self, raw_op: str) -> Tuple[Lexeme, Lexemes]:
         """
         Splits a string of operators into actual and
@@ -150,6 +153,26 @@ class Tokenizer(ABCTokenizer):
             return self._get_op_lexeme(op), list(map(self._get_op_lexeme, raw_op[op_len:]))
 
         raise SyntaxError("invalid operator: " + raw_op[0])
+
+    @staticmethod
+    def _parse_vardecls(tokens: Tokens) -> Tokens:
+        """
+        Just look for =
+            If token is not closing brace or variable: raise exception
+            If token is variable: mark as VARDECL (functions will be detected
+            by stackbuilder)
+        """
+
+        output = tokens.copy()
+
+        for i, token in enumerate(output[1:]):
+            if token.type == TokenType.OP_EQ:
+                if output[i].type not in (TokenType.RBRACE, TokenType.VAR):
+                    raise SyntaxError(f"cannot assign value to {token.value}")
+
+                output[i].type = TokenType.VARDECL
+
+        return output
 
     @staticmethod
     def _get_op_lexeme(op: str) -> Lexeme:
