@@ -30,19 +30,17 @@ class InteractiveShell:
             except KeyboardInterrupt:
                 return
 
+            if not expression:
+                continue
+
             try:
-                self._print(stdout, self.interpreter.interpret(expression))
-            except SyntaxError as exc:
-                self._print(stdout, "InvalidSyntax:", exc)
-            except KeyError as exc:
-                self._print(stdout, "NameNotFound:", exc)
+                self._print(stdout, self.interpreter.interpret(expression, self.ctx))
             except Exception as exc:
                 self._print(stdout, exc.__class__.__name__ + ":", exc)
 
     @staticmethod
     def _input(stdin) -> str:
-
-        return stdin.readline()
+        return stdin.readline().rstrip()
 
     @staticmethod
     def _print(stdout, *args, **kwargs):
@@ -60,7 +58,7 @@ def interactive_mode():
 
 
 def expr_exec_mode(expr: str):
-    print(interpret.Interpreter().interpret(expr))
+    print(interpret.Interpreter().interpret(expr, CTX))
 
 
 if __name__ == '__main__':
