@@ -37,8 +37,7 @@ class Interpreter(ABCInterpreter):
 
         return self._interpreter(stack, self.variables)
 
-    @staticmethod
-    def _interpreter(expression: builder.Stack, variables: Namespace) -> int:
+    def _interpreter(self, expression: builder.Stack, namespace: Namespace) -> int:
         unary_executors = {
             TokenType.UN_POS: operator.pos,
             TokenType.UN_NEG: operator.neg,
@@ -57,14 +56,13 @@ class Interpreter(ABCInterpreter):
             TokenType.OP_BITWISE_OR:  operator.or_,
             TokenType.OP_BITWISE_XOR: operator.xor,
 
-            TokenType.OP_EQEQ:  operator.ne,
-            TokenType.OP_NOTEQ: operator.eq,
+            TokenType.OP_EQEQ:  operator.eq,
+            TokenType.OP_NOTEQ: operator.ne,
 
             TokenType.OP_POW: operator.pow,
         }
 
         stack = []
-        namespace: Namespace = variables.copy()
 
         for token in expression:
             if token.type in (TokenType.NUMBER, TokenType.VARDECL):
@@ -82,16 +80,20 @@ class Interpreter(ABCInterpreter):
 
                 stack.pop()
             elif token.type == TokenType.OP_EQ:
-                left, right = stack.pop(), stack.pop()
+                right, left = stack.pop(), stack.pop()
                 namespace[left.value] = right
+                stack.append(right)
 
             elif token.kind == TokenKind.OPERATOR:
-                left, right = stack.pop(), stack.pop()
-                stack.append(Token(
-                    kind=TokenKind.NUMBER,
-                    typeof=TokenType.NUMBER,
-                    value=float(executors[token.type](left.value, right.value))
+                right, left = stack.pop(), stack.pop()
+                stack.append(self._number(
+                    float(executors[token.type](left.value, right.value))
                 ))
+            elif token.type == TokenType.FUNCCALL:
+                func = namespace[token.value.name]
+                stack, args = stack[:-token.value.argscount], stack[-token.value.argscount:]
+                call_result = func(*(token.value for token in args))
+                stack.append(self._number(call_result))
             else:
                 raise SyntaxError(f"unknown token: {token.type.name}({token.value})")
 
@@ -101,3 +103,11 @@ class Interpreter(ABCInterpreter):
             raise SyntaxError("multiple values left in stack")
 
         return result.value
+
+    @staticmethod
+    def _number(num: Union[int, float]) -> Token:
+        return Token(
+            kind=TokenKind.NUMBER,
+            typeof=TokenType.NUMBER,
+            value=num
+        )
