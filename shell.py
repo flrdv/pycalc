@@ -1,6 +1,7 @@
-from sys import argv
+from typing import Optional
+from sys import argv, stdin as _stdin, stdout as _stdout
 
-from pycalc.interpret import interactive, interpreter
+from pycalc.interpreter import interpret
 
 PROMPT = ">> "
 CTX = {
@@ -11,19 +12,59 @@ CTX = {
 }
 
 
+class InteractiveShell:
+    def __init__(self,
+                 prompt: str = PROMPT,
+                 interpreter: Optional[interpret.ABCInterpreter] = None,
+                 ctx: Optional[dict] = None):
+        self.prompt = prompt
+        self.interpreter = interpreter or interpret.Interpreter()
+        self.ctx = ctx
+
+    def session(self, stdin=_stdin, stdout=_stdout):
+        while True:
+            self._print(stdout, end=self.prompt)
+
+            try:
+                expression = self._input(stdin)
+            except KeyboardInterrupt:
+                return
+
+            try:
+                self._print(stdout, self.interpreter.interpret(expression))
+            except SyntaxError as exc:
+                self._print(stdout, "InvalidSyntax:", exc)
+            except KeyError as exc:
+                self._print(stdout, "NameNotFound:", exc)
+            except Exception as exc:
+                self._print(stdout, exc.__class__.__name__ + ":", exc)
+
+    @staticmethod
+    def _input(stdin) -> str:
+
+        return stdin.readline()
+
+    @staticmethod
+    def _print(stdout, *args, **kwargs):
+        print(*args, **kwargs, file=stdout, flush=True)
+
+
 def interactive_mode():
-    calculator = interpreter.Calculator(ctx=CTX)
-    shell = interactive.InteractiveShell(calculator)
-    shell.interactive_session(prompt=PROMPT)
+    interpreter = interpret.Interpreter()
+    shell = InteractiveShell(
+        prompt=PROMPT,
+        interpreter=interpreter,
+        ctx=CTX
+    )
+    shell.session()
 
 
 def expr_exec_mode(expr: str):
-    calculator = interpreter.Calculator(ctx=CTX)
-    print(calculator.execute(expr))
+    print(interpret.Interpreter().interpret(expr))
 
 
 if __name__ == '__main__':
-    if len(argv) >= 3 and argv[1] in ("-c", "--calculate"):
+    if len(argv) >= 3 and argv[1] in ("-e", "--execute"):
         expr_exec_mode("".join(argv[2:]))
     else:
         interactive_mode()
