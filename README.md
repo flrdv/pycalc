@@ -8,14 +8,14 @@ $ git clone https://github.com/fakefloordiv/pycalc && cd pycalc
 
 # How to run it?
 ```bash
-$ python3 shell.py
+$ python3 repl.py
 ```
 
 This will run an interactive shell
 
 Also, you can put an expression as an argument of command line:
 ```bash
-$ python3 shell.py -e "40+2"
+$ python3 repl.py -e "40+2"
 42
 ```
 
