@@ -68,7 +68,7 @@ class Interpreter(ABCInterpreter):
             if token.type in (TokenType.NUMBER, TokenType.VARDECL):
                 stack.append(token)
             elif token.type == TokenType.VAR:
-                stack.append(namespace[token.value])
+                stack.append(self._number(namespace[token.value]))
 
             elif token.kind == TokenKind.UNARY_OPERATOR:
                 tok = stack.pop()
@@ -81,7 +81,7 @@ class Interpreter(ABCInterpreter):
                 stack.pop()
             elif token.type == TokenType.OP_EQ:
                 right, left = stack.pop(), stack.pop()
-                namespace[left.value] = right
+                namespace[left.value] = right.value
                 stack.append(right)
 
             elif token.kind == TokenKind.OPERATOR:
