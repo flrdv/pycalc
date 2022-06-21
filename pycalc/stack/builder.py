@@ -55,7 +55,11 @@ class SortingStationBuilder(ABCBuilder):
                     priority = PRIORITIES_TABLE
                     token_priority = priority[token.type]
 
-                    while stack and token_priority <= priority[stack.top.type]:
+                    while stack and (
+                        stack.top.kind != TokenKind.BRACE
+                        and
+                        token_priority <= priority[stack.top.type]
+                    ):
                         output.append(stack.pop())
 
                     stack.append(token)
