@@ -50,7 +50,9 @@ class TokenType(enum.IntEnum):
     LBRACE = 19
     RBRACE = 20
     VAR = 21
-    FUNCCALL = 22
+    VARDECL = 22
+    FUNCCALL = 23
+    FUNCDECL = 24
 
 
 OPERATORS_TABLE = {
