@@ -1,8 +1,20 @@
 import enum
 from string import ascii_letters
+from typing import Union, Dict, Tuple
+
+
+Number = Union[int, float]
+NamespaceValue = Union[Number, callable]
+Namespace = Dict[str, NamespaceValue]
 
 UNARY_OPERATORS = {"+", "-"}
 ALLOWED_LITERALS = ascii_letters + "_"
+
+
+class Stack(list):
+    @property
+    def top(self):
+        return self[-1]
 
 
 class LexemeType(enum.IntEnum):
@@ -50,9 +62,11 @@ class TokenType(enum.IntEnum):
     LBRACE = 19
     RBRACE = 20
     VAR = 21
-    VARDECL = 22
+    IDENTIFIER = 22
     FUNCCALL = 23
     FUNCDECL = 24
+    FUNCBODY = 25
+    FUNCNAME = 26
 
 
 OPERATORS_TABLE = {
@@ -105,6 +119,7 @@ PRIORITIES_TABLE = {
 
     TokenType.OP_POW:   Priorities.MAXIMAL,
     TokenType.FUNCCALL: Priorities.MAXIMAL,
+    TokenType.FUNCDECL: Priorities.MAXIMAL,
 
     TokenType.OP_EQ:        Priorities.NONE,
     TokenType.OP_EQEQ:      Priorities.NONE,
@@ -112,3 +127,17 @@ PRIORITIES_TABLE = {
     TokenType.OP_COMMA:     Priorities.NONE,
     TokenType.OP_SEMICOLON: Priorities.NONE,
 }
+
+
+class PyCalcError(Exception):
+    def __init__(self, message: str, position: Tuple[int, int]):
+        self.message = message
+        self.position = position
+
+
+class InvalidSyntaxError(PyCalcError):
+    pass
+
+
+class ArgumentsError(PyCalcError):
+    pass
