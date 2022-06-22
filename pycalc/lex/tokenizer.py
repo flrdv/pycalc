@@ -177,53 +177,51 @@ class Tokenizer(ABCTokenizer):
         output = tokens.copy()
         state = _IDENTIFIER_MARK_STATE.FREEITER
 
-        for i, token in enumerate(output[1:]):
-            if token.type == TokenType.OP_EQ:
-                if output[i].type not in (TokenType.RBRACE, TokenType.VAR):
-                    raise SyntaxError(f"cannot assign value to {token.value}")
-
-                if output[i].type == TokenType.VAR:
-                    output[i].type = TokenType.IDENTIFIER
-
-        return output
-
-        # for i, token in enumerate(output[::-1]):
-        #     if state == _IDENTIFIER_MARK_STATE.FREEITER:
-        #         if token.type == TokenType.OP_EQ:
-        #             state = _IDENTIFIER_MARK_STATE.MET_EQ
+        # for i, token in enumerate(output[1:]):
+        #     if token.type == TokenType.OP_EQ:
+        #         if output[i].type not in (TokenType.RBRACE, TokenType.VAR):
+        #             raise SyntaxError(f"cannot assign value to {token.value}")
         #
-        #         continue
-        #     elif state == _IDENTIFIER_MARK_STATE.MET_EQ:
-        #         if token.type == TokenType.VAR:
-        #             token.type = TokenType.IDENTIFIER
-        #             state = _IDENTIFIER_MARK_STATE.FREEITER
-        #         elif token.type == TokenType.RBRACE:
-        #             state = _IDENTIFIER_MARK_STATE.ARGS_IDENTIFIER
-        #         else:
-        #             raise SyntaxError(f"cannot assign to {repr(token.value)}")
-        #     elif state == _IDENTIFIER_MARK_STATE.ARGS_IDENTIFIER:
-        #         if token.type == TokenType.OP_COMMA:
-        #             raise SyntaxError("double comma")
-        #         elif token.type != TokenType.VAR:
-        #             raise SyntaxError(f"disallowed argument identifier: {repr(token.value)}")
-        #
-        #         token.type = TokenType.IDENTIFIER
-        #         state = _IDENTIFIER_MARK_STATE.ARGS_COMMA
-        #     elif state == _IDENTIFIER_MARK_STATE.ARGS_COMMA:
-        #         if token.type == TokenType.LBRACE:
-        #             state = _IDENTIFIER_MARK_STATE.FUNCNAME
-        #         elif token.type != TokenType.OP_COMMA:
-        #             raise SyntaxError(f"expected comma, got {repr(token.value)}")
-        #         else:
-        #             state = _IDENTIFIER_MARK_STATE.ARGS_IDENTIFIER
-        #     elif state == _IDENTIFIER_MARK_STATE.FUNCNAME:
-        #         if token.type not in (TokenType.IDENTIFIER, TokenType.VAR):
-        #             raise SyntaxError(f"cannot assign func name to {repr(token.value)}")
-        #
-        #         token.type = TokenType.FUNCNAME
-        #         state = _IDENTIFIER_MARK_STATE.FREEITER
+        #         if output[i].type == TokenType.VAR:
+        #             output[i].type = TokenType.IDENTIFIER
         #
         # return output
+
+        for i, token in enumerate(output[::-1]):
+            if state == _IDENTIFIER_MARK_STATE.FREEITER:
+                if token.type == TokenType.OP_EQ:
+                    state = _IDENTIFIER_MARK_STATE.MET_EQ
+            elif state == _IDENTIFIER_MARK_STATE.MET_EQ:
+                if token.type == TokenType.VAR:
+                    token.type = TokenType.IDENTIFIER
+                    state = _IDENTIFIER_MARK_STATE.FREEITER
+                elif token.type == TokenType.RBRACE:
+                    state = _IDENTIFIER_MARK_STATE.ARGS_IDENTIFIER
+                else:
+                    raise SyntaxError(f"cannot assign to {repr(token.value)}")
+            elif state == _IDENTIFIER_MARK_STATE.ARGS_IDENTIFIER:
+                if token.type == TokenType.OP_COMMA:
+                    raise SyntaxError("double comma")
+                elif token.type != TokenType.VAR:
+                    raise SyntaxError(f"disallowed argument identifier: {repr(token.value)}")
+
+                token.type = TokenType.IDENTIFIER
+                state = _IDENTIFIER_MARK_STATE.ARGS_COMMA
+            elif state == _IDENTIFIER_MARK_STATE.ARGS_COMMA:
+                if token.type == TokenType.LBRACE:
+                    state = _IDENTIFIER_MARK_STATE.FUNCNAME
+                elif token.type != TokenType.OP_COMMA:
+                    raise SyntaxError(f"expected comma, got {repr(token.value)}")
+                else:
+                    state = _IDENTIFIER_MARK_STATE.ARGS_IDENTIFIER
+            elif state == _IDENTIFIER_MARK_STATE.FUNCNAME:
+                if token.type not in (TokenType.IDENTIFIER, TokenType.VAR):
+                    raise SyntaxError(f"cannot assign func name to {repr(token.value)}")
+
+                token.type = TokenType.FUNCDECL
+                state = _IDENTIFIER_MARK_STATE.FREEITER
+
+        return output
 
     @staticmethod
     def _get_op_lexeme(op: str) -> Lexeme:
