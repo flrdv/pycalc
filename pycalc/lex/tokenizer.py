@@ -10,10 +10,10 @@ from pycalc.tokentypes.types import (LexemeType, TokenType, TokenKind,
                                      OPERATORS_TABLE, UNARY_OPERATORS)
 
 
-class _UnaryParseState(enum.IntEnum):
-    operator = 1
-    unary = 2
-    token = 3
+_IDENTIFIER_MARK_STATE = enum.Enum(
+    "IDENTIFIER_MARK_STATE",
+    "ARGS_IDENTIFIER ARGS_COMMA MET_EQ FUNCNAME FREEITER"
+)
 
 
 class ABCTokenizer(ABC):
@@ -47,9 +47,9 @@ class Tokenizer(ABCTokenizer):
                 lexemes.append(self._parse_lexeme(element))
 
         unary = self._parse_unary(list(map(self._lexeme2token, lexemes)))
-        vardecls = self._parse_vardecls(unary)
+        identifiers = self._mark_identifiers(unary)
 
-        return vardecls
+        return unary
 
     @staticmethod
     def _lex(data: str) -> Iterator[Tuple[str, bool]]:
@@ -65,12 +65,19 @@ class Tokenizer(ABCTokenizer):
             state = data[0] in operators_chars
 
         for char in data[1:]:
+            if char == " ":
+                if buff:
+                    yield "".join(buff), state
+                    buff.clear()
+
+                continue
+
             if char in "()":
                 if buff:
                     yield "".join(buff), state
 
                 yield char, False
-                buff = []
+                buff.clear()
             elif (char in operators_chars) + state == 1:
                 if buff:
                     yield "".join(buff), state
@@ -155,24 +162,68 @@ class Tokenizer(ABCTokenizer):
         raise SyntaxError("invalid operator: " + raw_op[0])
 
     @staticmethod
-    def _parse_vardecls(tokens: Tokens) -> Tokens:
+    def _mark_identifiers(tokens: Tokens) -> Tokens:
         """
-        Just look for =
-            If token is not closing brace or variable: raise exception
-            If token is variable: mark as VARDECL (functions will be detected
-            by stackbuilder)
+        Just look for OP_EQ
+            - If token in the left:
+                - closing brace:
+                    - mark everything until opening brace as identifier
+                - variable:
+                    - mark as IDENTIFIER
+                - anything else:
+                    - raise exception
         """
 
         output = tokens.copy()
+        state = _IDENTIFIER_MARK_STATE.FREEITER
 
         for i, token in enumerate(output[1:]):
             if token.type == TokenType.OP_EQ:
                 if output[i].type not in (TokenType.RBRACE, TokenType.VAR):
                     raise SyntaxError(f"cannot assign value to {token.value}")
 
-                output[i].type = TokenType.VARDECL
+                if output[i].type == TokenType.VAR:
+                    output[i].type = TokenType.IDENTIFIER
 
         return output
+
+        # for i, token in enumerate(output[::-1]):
+        #     if state == _IDENTIFIER_MARK_STATE.FREEITER:
+        #         if token.type == TokenType.OP_EQ:
+        #             state = _IDENTIFIER_MARK_STATE.MET_EQ
+        #
+        #         continue
+        #     elif state == _IDENTIFIER_MARK_STATE.MET_EQ:
+        #         if token.type == TokenType.VAR:
+        #             token.type = TokenType.IDENTIFIER
+        #             state = _IDENTIFIER_MARK_STATE.FREEITER
+        #         elif token.type == TokenType.RBRACE:
+        #             state = _IDENTIFIER_MARK_STATE.ARGS_IDENTIFIER
+        #         else:
+        #             raise SyntaxError(f"cannot assign to {repr(token.value)}")
+        #     elif state == _IDENTIFIER_MARK_STATE.ARGS_IDENTIFIER:
+        #         if token.type == TokenType.OP_COMMA:
+        #             raise SyntaxError("double comma")
+        #         elif token.type != TokenType.VAR:
+        #             raise SyntaxError(f"disallowed argument identifier: {repr(token.value)}")
+        #
+        #         token.type = TokenType.IDENTIFIER
+        #         state = _IDENTIFIER_MARK_STATE.ARGS_COMMA
+        #     elif state == _IDENTIFIER_MARK_STATE.ARGS_COMMA:
+        #         if token.type == TokenType.LBRACE:
+        #             state = _IDENTIFIER_MARK_STATE.FUNCNAME
+        #         elif token.type != TokenType.OP_COMMA:
+        #             raise SyntaxError(f"expected comma, got {repr(token.value)}")
+        #         else:
+        #             state = _IDENTIFIER_MARK_STATE.ARGS_IDENTIFIER
+        #     elif state == _IDENTIFIER_MARK_STATE.FUNCNAME:
+        #         if token.type not in (TokenType.IDENTIFIER, TokenType.VAR):
+        #             raise SyntaxError(f"cannot assign func name to {repr(token.value)}")
+        #
+        #         token.type = TokenType.FUNCNAME
+        #         state = _IDENTIFIER_MARK_STATE.FREEITER
+        #
+        # return output
 
     @staticmethod
     def _get_op_lexeme(op: str) -> Lexeme:
@@ -231,6 +282,13 @@ class Tokenizer(ABCTokenizer):
                 value=int(lexeme.value[2:], 16)
             )
         elif lexeme.type == LexemeType.LITERAL:
+            if lexeme.value == ":":
+                return Token(
+                    kind=TokenKind.LITERAL,
+                    typeof=TokenType.IDENTIFIER,
+                    value=lexeme.value
+                )
+
             return Token(
                 kind=TokenKind.LITERAL,
                 typeof=TokenType.VAR,
