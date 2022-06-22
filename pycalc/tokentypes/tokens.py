@@ -40,6 +40,10 @@ class Token:
 
 
 class Func:
+    """
+    Func just represents some information about function call
+    """
+
     def __init__(self, name: str, argscount: int):
         self.name = name
         self.argscount = argscount
