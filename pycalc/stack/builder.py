@@ -39,6 +39,8 @@ class SortingStationBuilder(ABCBuilder):
                         stack.append(self._get_func(token, args_counters.pop()))
                     else:
                         output.append(token)
+                elif token.type == TokenType.FUNCDECL:
+                    stack.append(token)
                 elif token.type == TokenType.OP_COMMA:
                     try:
                         while stack.top.type != TokenType.LBRACE:
@@ -71,6 +73,8 @@ class SortingStationBuilder(ABCBuilder):
                     if stack and stack.top.type == TokenType.FUNCNAME:
                         # it's a function!
                         output.append(self._get_func(stack.pop(), args_counters.pop()))
+                else:
+                    raise TypeError(f"unknown token: {token}")
 
             while stack:
                 if stack.top.type == TokenType.LBRACE:
