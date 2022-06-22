@@ -2,13 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Iterator, List
 
 from pycalc.tokentypes.tokens import Token, Tokens, Func
-from pycalc.tokentypes.types import PRIORITIES_TABLE, TokenKind, TokenType
-
-
-class Stack(list):
-    @property
-    def top(self):
-        return self[-1]
+from pycalc.tokentypes.types import PRIORITIES_TABLE, TokenKind, TokenType, Stack
 
 
 class ABCBuilder(ABC):
@@ -37,7 +31,7 @@ class SortingStationBuilder(ABCBuilder):
             args_counters = self._count_args(expr)[::-1]
 
             for i, token in enumerate(expr):
-                if token.type in (TokenType.NUMBER, TokenType.VARDECL):
+                if token.type in (TokenType.NUMBER,):
                     output.append(token)
                 elif token.type == TokenType.VAR:
                     if i < len(expr)-1 and expr[i+1].type == TokenType.LBRACE:
@@ -56,7 +50,7 @@ class SortingStationBuilder(ABCBuilder):
                     token_priority = priority[token.type]
 
                     while stack and (
-                        stack.top.kind != TokenKind.BRACE
+                        stack.top.kind in (TokenKind.OPERATOR, TokenKind.UNARY_OPERATOR, TokenKind.FUNC)
                         and
                         token_priority <= priority[stack.top.type]
                     ):
@@ -67,14 +61,14 @@ class SortingStationBuilder(ABCBuilder):
                     stack.append(token)
                 elif token.type == TokenType.RBRACE:
                     try:
-                        while stack and stack.top.type != TokenType.LBRACE:
+                        while stack.top.type != TokenType.LBRACE:
                             output.append(stack.pop())
                     except IndexError:
                         raise SyntaxError("missing opening brace") from None
 
                     stack.pop()
 
-                    if stack.top.type == TokenType.VAR:
+                    if stack and stack.top.type == TokenType.FUNCNAME:
                         # it's a function!
                         output.append(self._get_func(stack.pop(), args_counters.pop()))
 
@@ -104,6 +98,7 @@ class SortingStationBuilder(ABCBuilder):
                 result.extend(counters)
                 skip_rbraces = len(counters)
 
+        # FIXME: f() and f(1) will both have 1 argument
         return list(map(lambda counter: counter+1, result))
 
     def __argscounter(self, tokens: Tokens) -> List[int]:
