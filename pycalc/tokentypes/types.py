@@ -64,9 +64,8 @@ class TokenType(enum.IntEnum):
     VAR = 21
     IDENTIFIER = 22
     FUNCCALL = 23
-    FUNCDECL = 24
-    FUNCBODY = 25
-    FUNCNAME = 26
+    FUNCDEF = 24
+    FUNCNAME = 25
 
 
 OPERATORS_TABLE = {
@@ -119,7 +118,7 @@ PRIORITIES_TABLE = {
 
     TokenType.OP_POW:   Priorities.MAXIMAL,
     TokenType.FUNCCALL: Priorities.MAXIMAL,
-    TokenType.FUNCDECL: Priorities.MAXIMAL,
+    TokenType.FUNCDEF:  Priorities.MAXIMAL,
 
     TokenType.OP_EQ:        Priorities.NONE,
     TokenType.OP_EQEQ:      Priorities.NONE,
