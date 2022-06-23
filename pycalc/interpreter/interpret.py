@@ -100,7 +100,7 @@ class Interpreter(ABCInterpreter):
         stack = Stack()
 
         for i, token in enumerate(expression):
-            if token.type in (TokenType.NUMBER, TokenType.IDENTIFIER):
+            if token.kind == TokenKind.NUMBER or token.type == TokenType.IDENTIFIER:
                 stack.append(token)
             elif token.type == TokenType.VAR:
                 stack.append(self._number(namespaces.get(token.value)))
@@ -123,7 +123,7 @@ class Interpreter(ABCInterpreter):
             elif token.kind == TokenKind.OPERATOR:
                 right, left = stack.pop(), stack.pop()
                 stack.append(self._number(
-                    float(self.executors[token.type](left.value, right.value))
+                    self.executors[token.type](left.value, right.value)
                 ))
             elif token.type == TokenType.FUNCCALL:
                 func = namespaces.get(token.value.name)
@@ -183,7 +183,7 @@ class Interpreter(ABCInterpreter):
     def _number(num: Number) -> Token:
         return Token(
             kind=TokenKind.NUMBER,
-            typeof=TokenType.NUMBER,
+            typeof=TokenType.FLOAT if isinstance(num, float) else TokenType.INTEGER,
             value=num
         )
 

@@ -167,17 +167,6 @@ class Tokenizer(ABCTokenizer):
 
     @staticmethod
     def _mark_identifiers(tokens: Tokens) -> Tokens:
-        """
-        Just look for OP_EQ
-            - If token in the left:
-                - closing brace:
-                    - mark everything until opening brace as identifier
-                - variable:
-                    - mark as IDENTIFIER
-                - anything else:
-                    - raise exception
-        """
-
         output = []
         state = _ParserState.OTHER
         funcdef = FuncDef("", [])
@@ -257,8 +246,11 @@ class Tokenizer(ABCTokenizer):
 
             return get_lexeme(LexemeType.HEXNUMBER)
         elif raw_lexeme[0] in string.digits + ".":
-            if len(raw_lexeme) == raw_lexeme.count("."):
+            if len(raw_lexeme) == raw_lexeme.count(".") or raw_lexeme.count(".") > 1:
                 raise SyntaxError("invalid float: " + raw_lexeme)
+
+            if "." in raw_lexeme:
+                return get_lexeme(LexemeType.FLOAT)
 
             return get_lexeme(LexemeType.NUMBER)
         elif raw_lexeme == "(":
@@ -288,13 +280,19 @@ class Tokenizer(ABCTokenizer):
         if lexeme.type == LexemeType.NUMBER:
             return Token(
                 kind=TokenKind.NUMBER,
-                typeof=TokenType.NUMBER,
+                typeof=TokenType.INTEGER,
+                value=int(lexeme.value)
+            )
+        elif lexeme.type == LexemeType.FLOAT:
+            return Token(
+                kind=TokenKind.NUMBER,
+                typeof=TokenType.FLOAT,
                 value=float(lexeme.value)
             )
         elif lexeme.type == LexemeType.HEXNUMBER:
             return Token(
                 kind=TokenKind.NUMBER,
-                typeof=TokenType.NUMBER,
+                typeof=TokenType.INTEGER,
                 value=int(lexeme.value[2:], 16)
             )
         elif lexeme.type == LexemeType.LITERAL:

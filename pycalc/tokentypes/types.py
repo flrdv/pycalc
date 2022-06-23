@@ -21,12 +21,13 @@ class LexemeType(enum.IntEnum):
     UNKNOWN = 0
     NUMBER = 1
     HEXNUMBER = 2
-    LITERAL = 3
-    OPERATOR = 4
-    LBRACE = 5
-    RBRACE = 6
-    DOT = 7
-    COMMA = 8
+    FLOAT = 3
+    LITERAL = 4
+    OPERATOR = 5
+    LBRACE = 6
+    RBRACE = 7
+    DOT = 8
+    COMMA = 9
 
 
 class TokenKind(enum.IntEnum):
@@ -39,33 +40,34 @@ class TokenKind(enum.IntEnum):
 
 
 class TokenType(enum.IntEnum):
-    NUMBER = -1
-    OP_EQ = 0
-    OP_EQEQ = 1
-    OP_NOTEQ = 2
-    OP_ADD = 3
-    OP_SUB = 4
-    OP_DIV = 5
-    OP_MUL = 6
-    OP_POW = 7
-    OP_LSHIFT = 8
-    OP_RSHIFT = 9
-    OP_BITWISE_AND = 10
-    OP_BITWISE_OR = 11
-    OP_BITWISE_XOR = 12
-    OP_MOD = 13
-    OP_FLOORDIV = 14
-    OP_SEMICOLON = 15
-    OP_COMMA = 16
-    UN_POS = 17
-    UN_NEG = 18
-    LBRACE = 19
-    RBRACE = 20
-    VAR = 21
-    IDENTIFIER = 22
-    FUNCCALL = 23
-    FUNCDEF = 24
-    FUNCNAME = 25
+    FLOAT = 0
+    INTEGER = 1
+    OP_EQ = 2
+    OP_EQEQ = 3
+    OP_NOTEQ = 4
+    OP_ADD = 5
+    OP_SUB = 6
+    OP_DIV = 7
+    OP_MUL = 8
+    OP_POW = 9
+    OP_LSHIFT = 10
+    OP_RSHIFT = 11
+    OP_BITWISE_AND = 12
+    OP_BITWISE_OR = 13
+    OP_BITWISE_XOR = 14
+    OP_MOD = 15
+    OP_FLOORDIV = 16
+    OP_SEMICOLON = 17
+    OP_COMMA = 18
+    UN_POS = 19
+    UN_NEG = 20
+    LBRACE = 21
+    RBRACE = 22
+    VAR = 23
+    IDENTIFIER = 24
+    FUNCCALL = 25
+    FUNCDEF = 26
+    FUNCNAME = 27
 
 
 OPERATORS_TABLE = {
