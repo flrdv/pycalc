@@ -1,28 +1,19 @@
-import math
 from typing import Optional
 from sys import argv, stdin as _stdin, stdout as _stdout
 
 from pycalc.interpreter import interpret
+from std.stdlibrary import stdnamespace
 
 PROMPT = ">> "
-CTX = {
-    "rt": lambda a, b: a ** (1 / b),
-    "sqrt": lambda a: a ** 1/2,
-    "cbrt": lambda a: a ** 1/3,
-    "pow": lambda a, b: a ** b,
-    "five": lambda: 5,
-    "pi": math.pi
-}
 
 
 class InteractiveShell:
     def __init__(self,
                  prompt: str = PROMPT,
-                 interpreter: Optional[interpret.ABCInterpreter] = None,
-                 ctx: Optional[dict] = None):
+                 interpreter: Optional[interpret.ABCInterpreter] = None
+                 ):
         self.prompt = prompt
         self.interpreter = interpreter or interpret.Interpreter()
-        self.ctx = ctx
 
     def session(self, stdin=_stdin, stdout=_stdout):
         while True:
@@ -37,7 +28,7 @@ class InteractiveShell:
                 continue
 
             try:
-                self._print(stdout, self.interpreter.interpret(expression, self.ctx))
+                self._print(stdout, self.interpreter.interpret(expression, stdnamespace))
             except Exception as exc:
                 self._print(stdout, exc.__class__.__name__ + ":", exc)
 
@@ -54,18 +45,49 @@ def interactive_mode():
     interpreter = interpret.Interpreter()
     shell = InteractiveShell(
         prompt=PROMPT,
-        interpreter=interpreter,
-        ctx=CTX
+        interpreter=interpreter
     )
     shell.session()
 
 
 def expr_exec_mode(expr: str):
-    print(interpret.Interpreter().interpret(expr, CTX))
+    print(interpret.Interpreter().interpret(expr, stdnamespace))
+
+
+def script_exec_mode(filename: str):
+    if not filename.endswith(".calc"):
+        print("unsupported file extension:", filename)
+        return
+
+    try:
+        fd = open(filename)
+    except FileNotFoundError:
+        print("file not found:", filename)
+        return
+
+    interpreter = interpret.Interpreter()
+
+    with fd:
+        for line in fd:
+            interpreter.interpret(line, stdnamespace)
 
 
 if __name__ == '__main__':
-    if len(argv) >= 3 and argv[1] in ("-e", "--execute"):
-        expr_exec_mode("".join(argv[2:]))
+    options = {
+        "-e": expr_exec_mode,
+        "--execute": expr_exec_mode,
+        "-s": script_exec_mode,
+        "--script": script_exec_mode,
+    }
+
+    if len(argv) > 1 and (argv[1] not in options or len(argv) != 3):
+        print("Invalid options:", " ".join(argv[1:]))
+        print("Available options:")
+        print("\t-e, --execute <expression>: execute expression right from a command line")
+        print("\t-s, --script <filename>.calc: execute program from a file")
+    if len(argv) == 3:
+        option, value = argv[1:]
+
+        options[option](value)
     else:
         interactive_mode()
