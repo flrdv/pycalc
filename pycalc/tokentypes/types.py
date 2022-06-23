@@ -140,3 +140,7 @@ class InvalidSyntaxError(PyCalcError):
 
 class ArgumentsError(PyCalcError):
     pass
+
+
+class NameNotFoundError(PyCalcError):
+    pass
