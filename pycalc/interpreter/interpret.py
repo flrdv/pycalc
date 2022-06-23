@@ -103,10 +103,10 @@ class Interpreter(ABCInterpreter):
             if token.kind == TokenKind.NUMBER or token.type == TokenType.IDENTIFIER:
                 stack.append(token)
             elif token.type == TokenType.VAR:
-                stack.append(self._number(namespaces.get(token.value)))
+                stack.append(self._token(namespaces.get(token.value)))
 
             elif token.kind == TokenKind.UNARY_OPERATOR:
-                stack.append(self._number(
+                stack.append(self._token(
                     self.unary_executors[token.type](stack.pop().value)
                 ))
 
@@ -122,14 +122,14 @@ class Interpreter(ABCInterpreter):
 
             elif token.kind == TokenKind.OPERATOR:
                 right, left = stack.pop(), stack.pop()
-                stack.append(self._number(
+                stack.append(self._token(
                     self.executors[token.type](left.value, right.value)
                 ))
             elif token.type == TokenType.FUNCCALL:
                 func = namespaces.get(token.value.name)
                 stack, args = self._get_func_args(token.value.argscount, stack)
                 call_result = func(*(arg.value for arg in args))
-                stack.append(self._number(call_result))
+                stack.append(self._token(call_result))
             elif token.type == TokenType.FUNCDEF:
                 func_namespace = namespaces.copy()
                 func_namespace.add_namespace({})
@@ -180,12 +180,25 @@ class Interpreter(ABCInterpreter):
         )
 
     @staticmethod
-    def _number(num: Number) -> Token:
-        return Token(
-            kind=TokenKind.NUMBER,
-            typeof=TokenType.FLOAT if isinstance(num, float) else TokenType.INTEGER,
-            value=num
-        )
+    def _token(num: Number) -> Token:
+        if isinstance(num, int):
+            return Token(
+                kind=TokenKind.NUMBER,
+                typeof=TokenType.INTEGER,
+                value=int(num)
+            )
+        elif isinstance(num, float):
+            return Token(
+                kind=TokenKind.NUMBER,
+                typeof=TokenType.FLOAT,
+                value=num
+            )
+        else:
+            return Token(
+                kind=TokenKind.OTHER,
+                typeof=TokenType.OTHER,
+                value=num
+            )
 
     @staticmethod
     def _get_func_args(argscount: int, stack: Stack) -> Tuple[Stack, Tokens]:
