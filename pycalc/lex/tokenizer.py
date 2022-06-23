@@ -99,19 +99,33 @@ class Tokenizer(ABCTokenizer):
         buffer: Tokens = []
 
         if tokens[0].kind == TokenKind.OPERATOR:
-            buffer.append(tokens[0])
+            for i, token in enumerate(tokens):
+                if token.kind != TokenKind.OPERATOR:
+                    tokens = tokens[i:]
+                    break
+
+                buffer.append(token)
+
+            unary = self._calculate_final_unary(buffer)
+            output.append(Token(
+                kind=TokenKind.UNARY_OPERATOR,
+                typeof=unary,
+                value="+" if unary == TokenType.UN_POS else "-"
+            ))
+            buffer.clear()
         else:
             output.append(tokens[0])
+            tokens = tokens[1:]
 
-        for token in tokens[1:]:
+        for token in tokens:
             if buffer:
                 if token.kind == TokenKind.OPERATOR:
                     buffer.append(token)
                 else:
                     output.append(buffer[0])
-                    unary = self._calculate_final_unary(buffer[1:])
 
-                    if unary:
+                    if buffer[1:]:
+                        unary = self._calculate_final_unary(buffer[1:])
                         output.append(Token(
                             kind=TokenKind.UNARY_OPERATOR,
                             typeof=unary,
@@ -131,9 +145,9 @@ class Tokenizer(ABCTokenizer):
         return output
 
     @staticmethod
-    def _calculate_final_unary(ops: Tokens) -> Optional[TokenType]:
+    def _calculate_final_unary(ops: Tokens) -> TokenType:
         if not ops:
-            return None
+            raise ValueError("_calculate_final_query(): ops are empty")
 
         subs = 0
 
