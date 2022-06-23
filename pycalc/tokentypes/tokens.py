@@ -4,7 +4,7 @@ from . import types
 
 Lexemes = List["Lexeme"]
 Tokens = List["Token"]
-TokenValue = Union[int, float, str, "Func"]
+TokenValue = Union[int, float, str, "Func", "FuncDef"]
 
 
 class Lexeme:
@@ -50,5 +50,20 @@ class Func:
 
     def __str__(self):
         return f"Func(name={repr(self.name)}, argscount={self.argscount})"
+
+    __repr__ = __str__
+
+
+class FuncDef:
+    """
+    FuncDef represents function defining
+    """
+
+    def __init__(self, name: str, args: Tokens):
+        self.name = name
+        self.args = args
+
+    def __str__(self):
+        return f"FuncDef(name={repr(self.name)}, args=({','.join(arg.value for arg in self.args)}))"
 
     __repr__ = __str__
