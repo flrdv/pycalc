@@ -1,18 +1,21 @@
 import operator
 from functools import reduce
 from abc import ABC, abstractmethod
-from typing import Optional, Callable, Tuple
+from typing import Optional, Tuple, Union
 
 from pycalc.lex import tokenizer as _tokenizer
 from pycalc.stack import builder
-from pycalc.tokentypes.tokens import Token, Tokens
+from pycalc.tokentypes.tokens import Token, Tokens, Function
 from pycalc.tokentypes.types import (TokenKind, TokenType, Stack,
                                      Namespace, Number, ArgumentsError)
 
 
+Value = Union[Number, Function]
+
+
 class ABCInterpreter(ABC):
     @abstractmethod
-    def interpret(self, code: str, namespace: Namespace) -> Number:
+    def interpret(self, code: str, namespace: Namespace) -> Value:
         ...
 
 
@@ -47,7 +50,7 @@ class Interpreter(ABCInterpreter):
         self.tokenizer = tokenize or _tokenizer.Tokenizer()
         self.stackbuilder = stackbuilder or builder.SortingStationBuilder()
 
-    def interpret(self, code: str, namespace: Namespace) -> Number:
+    def interpret(self, code: str, namespace: Namespace) -> Value:
         """
         Currently parses only one-line expressions
         """
@@ -57,7 +60,7 @@ class Interpreter(ABCInterpreter):
 
         return self._interpreter(stack, namespace)
 
-    def _interpreter(self, expression: Stack, namespace: Namespace) -> Number:
+    def _interpreter(self, expression: Stack, namespace: Namespace) -> Value:
         stack = Stack()
 
         for i, token in enumerate(expression):
@@ -92,13 +95,15 @@ class Interpreter(ABCInterpreter):
                 call_result = func(*(arg.value for arg in args))
                 stack.append(self._number(call_result))
             elif token.type == TokenType.FUNCDEF:
-                namespace[token.value.name] = self._spawn_function(
+                func = self._spawn_function(
                     namespace=namespace,
+                    name=token.value.name,
                     fargs=[tok.value for tok in token.value.args],
                     body=expression[i+1:]
                 )
+                namespace[token.value.name] = func
 
-                return 0
+                return func
             else:
                 raise SyntaxError(f"unknown token: {token.type.name}({token.value})")
 
@@ -109,7 +114,11 @@ class Interpreter(ABCInterpreter):
 
         return result.value
 
-    def _spawn_function(self, namespace: Namespace, fargs: Tokens, body: Stack) -> Callable:
+    def _spawn_function(self,
+                        namespace: Namespace,
+                        name: str,
+                        fargs: Tokens,
+                        body: Stack) -> Function:
         def real_function(*args) -> Number:
             if not fargs and args:
                 raise ArgumentsError("function takes no arguments")
@@ -125,7 +134,10 @@ class Interpreter(ABCInterpreter):
                 namespace, self._get_args_namespace(fargs, args)
             ))
 
-        return real_function
+        return Function(
+            name=f"{name}({','.join(fargs)})",
+            target=real_function
+        )
 
     @staticmethod
     def _number(num: Number) -> Token:
