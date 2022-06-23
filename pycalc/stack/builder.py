@@ -55,6 +55,8 @@ class SortingStationBuilder(ABCBuilder):
                         stack.top.kind in (TokenKind.OPERATOR, TokenKind.UNARY_OPERATOR, TokenKind.FUNC)
                         and
                         token_priority <= priority[stack.top.type]
+                        and
+                        stack.top.type != TokenType.OP_POW
                     ):
                         output.append(stack.pop())
 
