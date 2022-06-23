@@ -82,6 +82,16 @@ f(x)=x+5;x
 ```
 How do you think, what will `f(1)` return? Correct, value of `x`. `x+5` does nothing, so result of this expression will be removed from the stack after semicolon
 
+### Higher-order functions
+PyCalc supports even this. Higher-order function is a function that returns another function.
+For example: 
+```
+f(a) = y(b) = a * b
+mulBy5 = f(5)
+mulBy5(5)
+```
+This example will return `10`
+
 ### Functions calling
 To call a function, simply type `<name>(<args>)`.
 For example: `root(25, 5)`
