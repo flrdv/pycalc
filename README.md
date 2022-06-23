@@ -72,6 +72,15 @@ For example: `f(x,y)=x+y`
 
 Interesting fact: function body is a single expression. So this means that end of body is end of the line. So yes, currently you cannot define a function anywhere you want: usually function is a separated line
 
+### Multiple expressions in functions
+Wait, what? You said function body is a single expression!
+Well, yes. The problem is function body is a single expression __for interpreter__. You, as human, can write multiple expressions in function body as well. For this, you need to separate them with semicolon. Result of the last one expression is function result
+For example:
+```
+f(x)=x+5;x
+```
+How do you think, what will `f(1)` return? Correct, value of `x`. `x+5` does nothing, so result of this expression will be removed from the stack after semicolon
+
 ### Functions calling
 To call a function, simply type `<name>(<args>)`.
 For example: `root(25, 5)`
