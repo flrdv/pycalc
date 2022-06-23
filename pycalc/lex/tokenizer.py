@@ -220,6 +220,7 @@ class Tokenizer(ABCTokenizer):
                     raise SyntaxError(f"cannot assign func name to {repr(token.value)}")
 
                 funcdef.name = token.value
+                funcdef.args.reverse()
                 output.append(Token(
                     kind=TokenKind.FUNC,
                     typeof=TokenType.FUNCDEF,
