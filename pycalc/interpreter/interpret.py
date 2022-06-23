@@ -89,7 +89,7 @@ class Interpreter(ABCInterpreter):
             elif token.type == TokenType.FUNCCALL:
                 func = namespace[token.value.name]
                 stack, args = self._get_func_args(token.value.argscount, stack)
-                call_result = func(*(token.value for token in args))
+                call_result = func(*(arg.value for arg in args))
                 stack.append(self._number(call_result))
             elif token.type == TokenType.FUNCDEF:
                 namespace[token.value.name] = self._spawn_function(
@@ -111,16 +111,15 @@ class Interpreter(ABCInterpreter):
 
     def _spawn_function(self, namespace: Namespace, fargs: Tokens, body: Stack) -> Callable:
         def real_function(*args) -> Number:
+            if not fargs and args:
+                raise ArgumentsError("function takes no arguments")
             if len(fargs) != len(args):
                 text = (
                     "not enough arguments",
                     "too much arguments"
                 )[len(fargs) < len(args)]
 
-                raise ArgumentsError(
-                    f"{text}: expected {len(fargs)}, got {len(args)}",
-                    (0, 0)  # TODO: how to add position here?
-                )
+                raise ArgumentsError(f"{text}: expected {len(fargs)}, got {len(args)}")
 
             return self._interpreter(body, self._merge_namespaces(
                 namespace, self._get_args_namespace(fargs, args)
@@ -138,6 +137,9 @@ class Interpreter(ABCInterpreter):
 
     @staticmethod
     def _get_func_args(argscount: int, stack: Stack) -> Tuple[Stack, Tokens]:
+        if not argscount:
+            return stack, []
+
         return stack[:-argscount], stack[-argscount:]
 
     @staticmethod
