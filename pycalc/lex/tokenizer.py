@@ -202,6 +202,9 @@ class Tokenizer(ABCTokenizer):
             elif state == _IDENTIFIER_MARK_STATE.ARGS_IDENTIFIER:
                 if token.type == TokenType.OP_COMMA:
                     raise SyntaxError("double comma")
+                elif token.type == TokenType.LBRACE:
+                    state = _IDENTIFIER_MARK_STATE.FUNCNAME
+                    continue
                 elif token.type != TokenType.VAR:
                     raise SyntaxError(f"disallowed argument identifier: {repr(token.value)}")
 
