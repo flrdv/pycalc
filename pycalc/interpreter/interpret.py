@@ -7,10 +7,43 @@ from pycalc.lex import tokenizer as _tokenizer
 from pycalc.stack import builder
 from pycalc.tokentypes.tokens import Token, Tokens, Function
 from pycalc.tokentypes.types import (TokenKind, TokenType, Stack,
-                                     Namespace, Number, ArgumentsError)
+                                     Namespace, Number, NamespaceValue,
+                                     ArgumentsError, NameNotFoundError)
 
 
 Value = Union[Number, Function]
+
+
+class NamespaceStack(Stack):
+    def add_namespaces(self, *namespaces: Namespace):
+        for namespace in namespaces:
+            self.append(namespace)
+
+    def add_namespace(self, namespace: Namespace):
+        self.append(namespace)
+
+    def with_add_namespace(self, namespace: Namespace) -> "NamespaceStack":
+        self.add_namespace(namespace)
+        return self
+
+    def get(self, var: str) -> NamespaceValue:
+        for namespace in self[::-1]:
+            if var in namespace:
+                return namespace[var]
+
+        raise NameNotFoundError(var)
+
+    def set(self, key: str, value: NamespaceValue):
+        self.top[key] = value
+
+    def copy(self) -> "NamespaceStack":
+        return NamespaceStack(super().copy())
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.pop()
 
 
 class ABCInterpreter(ABC):
@@ -46,7 +79,8 @@ class Interpreter(ABCInterpreter):
 
     def __init__(self,
                  tokenize: Optional[_tokenizer.ABCTokenizer] = None,
-                 stackbuilder: Optional[builder.ABCBuilder] = None):
+                 stackbuilder: Optional[builder.ABCBuilder] = None,
+                 ):
         self.tokenizer = tokenize or _tokenizer.Tokenizer()
         self.stackbuilder = stackbuilder or builder.SortingStationBuilder()
 
@@ -57,17 +91,19 @@ class Interpreter(ABCInterpreter):
 
         tokens = self.tokenizer.tokenize(code)
         stack = self.stackbuilder.build(tokens)
+        namespaces = NamespaceStack()
+        namespaces.add_namespace(namespace)
 
-        return self._interpreter(stack, namespace)
+        return self._interpreter(stack, namespaces)
 
-    def _interpreter(self, expression: Stack, namespace: Namespace) -> Value:
+    def _interpreter(self, expression: Stack, namespaces: NamespaceStack) -> Value:
         stack = Stack()
 
         for i, token in enumerate(expression):
             if token.type in (TokenType.NUMBER, TokenType.IDENTIFIER):
                 stack.append(token)
             elif token.type == TokenType.VAR:
-                stack.append(self._number(namespace[token.value]))
+                stack.append(self._number(namespaces.get(token.value)))
 
             elif token.kind == TokenKind.UNARY_OPERATOR:
                 stack.append(self._number(
@@ -81,7 +117,7 @@ class Interpreter(ABCInterpreter):
                 stack.pop()
             elif token.type == TokenType.OP_EQ:
                 right, left = stack.pop(), stack.pop()
-                namespace[left.value] = right.value
+                namespaces.set(left.value, right.value)
                 stack.append(right)
 
             elif token.kind == TokenKind.OPERATOR:
@@ -90,18 +126,21 @@ class Interpreter(ABCInterpreter):
                     float(self.executors[token.type](left.value, right.value))
                 ))
             elif token.type == TokenType.FUNCCALL:
-                func = namespace[token.value.name]
+                func = namespaces.get(token.value.name)
                 stack, args = self._get_func_args(token.value.argscount, stack)
                 call_result = func(*(arg.value for arg in args))
                 stack.append(self._number(call_result))
             elif token.type == TokenType.FUNCDEF:
+                func_namespace = namespaces.copy()
+                func_namespace.add_namespace({})
+
                 func = self._spawn_function(
-                    namespace=namespace,
+                    namespace=func_namespace,
                     name=token.value.name,
                     fargs=[tok.value for tok in token.value.args],
                     body=expression[i+1:]
                 )
-                namespace[token.value.name] = func
+                namespaces.set(token.value.name, func)
 
                 return func
             else:
@@ -115,7 +154,7 @@ class Interpreter(ABCInterpreter):
         return result.value
 
     def _spawn_function(self,
-                        namespace: Namespace,
+                        namespace: NamespaceStack,
                         name: str,
                         fargs: List[str],
                         body: Stack) -> Function:
@@ -130,9 +169,10 @@ class Interpreter(ABCInterpreter):
 
                 raise ArgumentsError(f"{text}: expected {len(fargs)}, got {len(args)}")
 
-            return self._interpreter(body, self._merge_namespaces(
-                namespace, self._get_args_namespace(fargs, args)
-            ))
+            args_namespace = self._get_args_namespace(fargs, args)
+
+            with namespace.with_add_namespace(args_namespace):
+                return self._interpreter(body, namespace)
 
         return Function(
             name=f"{name}({','.join(fargs)})",
