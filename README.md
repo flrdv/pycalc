@@ -24,7 +24,7 @@ $ python3 repl.py -e "40+2"
 I personally allow you to use: integers, floats, constants, and functions (including defining). For example:
 ```
 f(x,y)=x+y
-40 + rt(25, 5) - pi + 0.14 << f(1,2)
+40 + rt(25, 5) - pi + 0.14 / .14 << f(1,2)
 ```
 
 # Documentation
@@ -54,7 +54,7 @@ Or even: `-+--++--+-++--+++-+1 == -1`
 ## Numbers
 Internally number is mostly float (sometimes int). There are 3 types of numbers:
 - integers (example: `42`)
-- floats (example: `0.42`, exponenta is not supported)
+- floats (example: `0.42`, or even `.5` (that is simply `0.5`); exponenta is not supported)
 - hexdecimals (example: `0x5f3759df`)
 
 ## Variables
