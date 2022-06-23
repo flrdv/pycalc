@@ -102,12 +102,13 @@ class SortingStationBuilder(ABCBuilder):
                 result.extend(counters)
                 skip_rbraces = len(counters)
 
-        # FIXME: f() and f(1) will both have 1 argument
-        return list(map(lambda counter: counter+1, result))
+        return result
 
     def __argscounter(self, tokens: Tokens) -> List[int]:
         result = [0]
         skip_rbraces = 0
+
+        waitforcomma = False
 
         for i, token in enumerate(tokens):
             if skip_rbraces:
@@ -118,7 +119,12 @@ class SortingStationBuilder(ABCBuilder):
             elif token.type == TokenType.RBRACE:
                 return result
 
-            result[0] += token.type == TokenType.OP_COMMA
+            if waitforcomma:
+                if token.type == TokenType.OP_COMMA:
+                    waitforcomma = False
+            else:
+                result[0] += 1
+                waitforcomma = True
 
             if token.type == TokenType.LBRACE:
                 counters = self.__argscounter(tokens[i+1:])

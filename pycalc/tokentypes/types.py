@@ -129,9 +129,9 @@ PRIORITIES_TABLE = {
 
 
 class PyCalcError(Exception):
-    def __init__(self, message: str, position: Tuple[int, int]):
+    def __init__(self, message: str):
         self.message = message
-        self.position = position
+        super().__init__(message)
 
 
 class InvalidSyntaxError(PyCalcError):
