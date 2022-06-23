@@ -28,7 +28,7 @@ f(x,y)=x+y
 
 # Documentation
 
-### Operations
+## Operations
 There are 14 operators (and 3 internal):
 - `+` add
 - `-` subtract
@@ -45,28 +45,28 @@ There are 14 operators (and 3 internal):
 - `==` is equal (returns 0 if not, 1 if equal)
 - `!=` not equal (inverted equal)
 
-### Unary operations
+## Unary operations
 Unary is also supported.
 For example: `2+-2 == 0`
 Or even: `-+--++--+-++--+++-+1 == -1`
 
-### Numbers
+## Numbers
 Internally number is mostly float (sometimes int). There are 3 types of numbers:
 - integers (example: `42`)
 - floats (example: `0.42`, exponenta is not supported)
 - hexdecimals (example: `0x5f3759df`)
 
-### Variables
-#### Variables declaring
+## Variables
+### Variables declaring
 To declare a variable, simply type `<name> = <value>`. 
 For example: `my_constant = (0x5f3759df + 42) >> 8`
 
-#### Get variable value
+### Get variable value
 To get a value of variable, simply type its name.
 For example: `my_constant + 5`
 
-### Functions
-#### Functions declaring
+## Functions
+### Functions declaring
 To define a function, simply type `<name>(<args>) = <expression>`.
 For example: `f(x,y)=x+y`
 
