@@ -37,6 +37,7 @@ class TokenKind(enum.IntEnum):
     UNARY_OPERATOR = 3
     BRACE = 4
     FUNC = 5
+    OTHER = 6
 
 
 class TokenType(enum.IntEnum):
@@ -68,6 +69,7 @@ class TokenType(enum.IntEnum):
     FUNCCALL = 25
     FUNCDEF = 26
     FUNCNAME = 27
+    OTHER = 28
 
 
 OPERATORS_TABLE = {
