@@ -1,5 +1,4 @@
 import math
-from traceback import format_exc
 from typing import Optional
 from sys import argv, stdin as _stdin, stdout as _stdout
 
@@ -11,6 +10,7 @@ CTX = {
     "sqrt": lambda a: a ** 1/2,
     "cbrt": lambda a: a ** 1/3,
     "pow": lambda a, b: a ** b,
+    "five": lambda: 5,
     "pi": math.pi
 }
 
