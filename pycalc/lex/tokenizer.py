@@ -10,10 +10,14 @@ from pycalc.tokentypes.types import (LexemeType, TokenType, TokenKind,
                                      OPERATORS_TABLE, UNARY_OPERATORS)
 
 
-_IDENTIFIER_MARK_STATE = enum.Enum(
-    "IDENTIFIER_MARK_STATE",
-    "ARGS_IDENTIFIER ARGS_COMMA MET_EQ FUNCNAME FREEITER"
-)
+class _ParserState(enum.IntEnum):
+    ARG = 1
+    LAMBDA_ARG = 2
+    ARG_COMMA = 3
+    LAMBDA_ARG_COMMA = 4
+    EQ = 5
+    FUNCNAME = 6
+    OTHER = 7
 
 
 class ABCTokenizer(ABC):
@@ -175,7 +179,7 @@ class Tokenizer(ABCTokenizer):
         """
 
         output = []
-        state = _IDENTIFIER_MARK_STATE.FREEITER
+        state = _ParserState.OTHER
         funcdef = FuncDef("", [])
         eq = Token(
             kind=TokenKind.OPERATOR,
@@ -184,41 +188,41 @@ class Tokenizer(ABCTokenizer):
         )
 
         for i, token in enumerate(tokens[::-1]):
-            if state == _IDENTIFIER_MARK_STATE.FREEITER:
+            if state == _ParserState.OTHER:
                 if token.type == TokenType.OP_EQ:
-                    state = _IDENTIFIER_MARK_STATE.MET_EQ
+                    state = _ParserState.EQ
                 else:
                     output.append(token)
-            elif state == _IDENTIFIER_MARK_STATE.MET_EQ:
+            elif state == _ParserState.EQ:
                 if token.type == TokenType.VAR:
                     token.type = TokenType.IDENTIFIER
-                    state = _IDENTIFIER_MARK_STATE.FREEITER
+                    state = _ParserState.OTHER
                     output.append(eq)
                     output.append(token)
                 elif token.type == TokenType.RBRACE:
-                    state = _IDENTIFIER_MARK_STATE.ARGS_IDENTIFIER
+                    state = _ParserState.ARG
                 else:
                     raise SyntaxError(f"cannot assign to {repr(token.value)}")
-            elif state == _IDENTIFIER_MARK_STATE.ARGS_IDENTIFIER:
+            elif state == _ParserState.ARG:
                 if token.type == TokenType.OP_COMMA:
                     raise SyntaxError("double comma")
                 elif token.type == TokenType.LBRACE:
-                    state = _IDENTIFIER_MARK_STATE.FUNCNAME
+                    state = _ParserState.FUNCNAME
                     continue
                 elif token.type != TokenType.VAR:
                     raise SyntaxError(f"disallowed argument identifier: {repr(token.value)}")
 
                 funcdef.args.append(token)
                 token.type = TokenType.IDENTIFIER
-                state = _IDENTIFIER_MARK_STATE.ARGS_COMMA
-            elif state == _IDENTIFIER_MARK_STATE.ARGS_COMMA:
+                state = _ParserState.ARG_COMMA
+            elif state == _ParserState.ARG_COMMA:
                 if token.type == TokenType.LBRACE:
-                    state = _IDENTIFIER_MARK_STATE.FUNCNAME
+                    state = _ParserState.FUNCNAME
                 elif token.type != TokenType.OP_COMMA:
                     raise SyntaxError(f"expected comma, got {repr(token.value)}")
                 else:
-                    state = _IDENTIFIER_MARK_STATE.ARGS_IDENTIFIER
-            elif state == _IDENTIFIER_MARK_STATE.FUNCNAME:
+                    state = _ParserState.ARG
+            elif state == _ParserState.FUNCNAME:
                 if token.type not in (TokenType.IDENTIFIER, TokenType.VAR):
                     raise SyntaxError(f"cannot assign func name to {repr(token.value)}")
 
@@ -230,7 +234,7 @@ class Tokenizer(ABCTokenizer):
                     value=funcdef
                 ))
                 funcdef = FuncDef("", [])
-                state = _IDENTIFIER_MARK_STATE.FREEITER
+                state = _ParserState.OTHER
 
         if funcdef.name or funcdef.args:
             raise SyntaxError("strange shit happened")
