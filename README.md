@@ -1,3 +1,4 @@
+[![wakatime](https://wakatime.com/badge/user/b4a2ea9a-a721-41c8-b704-79b9b8cec646/project/3e68a432-deec-4dab-ba8a-a5f424e91eed.svg)](https://wakatime.com/badge/user/b4a2ea9a-a721-41c8-b704-79b9b8cec646/project/3e68a432-deec-4dab-ba8a-a5f424e91eed)
 # pycalc
 Simple calculator on python, written in academic purposes. Uses Sorting Station Algorithm for building reverse polish notation stack. Supports all kinds of operations python supports (except bool operations like or, not, etc. but they will be implemented as a functions of std-library), functions defining, variables declarations, etc.
 
@@ -80,6 +81,16 @@ For example:
 f(x)=x+5;x
 ```
 How do you think, what will `f(1)` return? Correct, value of `x`. `x+5` does nothing, so result of this expression will be removed from the stack after semicolon
+
+### Higher-order functions
+PyCalc supports even this. Higher-order function is a function that returns another function.
+For example: 
+```
+f(a) = y(b) = a * b
+mulBy5 = f(5)
+mulBy5(5)
+```
+This example will return `10`
 
 ### Functions calling
 To call a function, simply type `<name>(<args>)`.
