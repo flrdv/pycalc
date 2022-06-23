@@ -1,10 +1,10 @@
 import enum
 from string import ascii_letters
-from typing import Union, Dict, Tuple
+from typing import Union, Dict, Callable
 
 
 Number = Union[int, float]
-NamespaceValue = Union[Number, callable]
+NamespaceValue = Union[Number, Callable]
 Namespace = Dict[str, NamespaceValue]
 
 UNARY_OPERATORS = {"+", "-"}
