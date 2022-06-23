@@ -78,17 +78,6 @@ class Interpreter(ABCInterpreter):
                 stack.pop()
             elif token.type == TokenType.OP_EQ:
                 right, left = stack.pop(), stack.pop()
-
-                if left.type == TokenType.FUNCDECL:
-                    stack, args = self._get_func_args(left.value.argscount, stack)
-                    namespace[left.value.name] = self._spawn_function(
-                        namespace=namespace,
-                        fargs=args,
-                        body=expression[i+1:]
-                    )
-
-                    return 0
-
                 namespace[left.value] = right.value
                 stack.append(right)
 
@@ -102,8 +91,14 @@ class Interpreter(ABCInterpreter):
                 stack, args = self._get_func_args(token.value.argscount, stack)
                 call_result = func(*(token.value for token in args))
                 stack.append(self._number(call_result))
-            elif token.type == TokenType.FUNCDECL:
-                stack.append(token)
+            elif token.type == TokenType.FUNCDEF:
+                namespace[token.value.name] = self._spawn_function(
+                    namespace=namespace,
+                    fargs=[tok.value for tok in token.value.args],
+                    body=expression[i+1:]
+                )
+
+                return 0
             else:
                 raise SyntaxError(f"unknown token: {token.type.name}({token.value})")
 
