@@ -1,7 +1,7 @@
 import operator
 from functools import reduce
 from abc import ABC, abstractmethod
-from typing import Optional, Tuple, Union
+from typing import Optional, Tuple, Union, List
 
 from pycalc.lex import tokenizer as _tokenizer
 from pycalc.stack import builder
@@ -117,7 +117,7 @@ class Interpreter(ABCInterpreter):
     def _spawn_function(self,
                         namespace: Namespace,
                         name: str,
-                        fargs: Tokens,
+                        fargs: List[str],
                         body: Stack) -> Function:
         def real_function(*args) -> Number:
             if not fargs and args:
