@@ -1,17 +1,16 @@
-from typing import Optional, List, Dict, Union
+from typing import List, Union
 
 from . import types
 
 Lexemes = List["Lexeme"]
 Tokens = List["Token"]
-Context = Dict[str, Union[int, callable]]
-TokenValue = Union[float, str, Tokens, "FuncCall"]
+TokenValue = Union[int, float, str, "Func", "FuncDef"]
 
 
 class Lexeme:
     """
     A class that contains a raw piece of input stream.
-    It may be: number, operator, lbrace, rbrace
+    It may be: number, literal, operator, lbrace, rbrace
     """
 
     def __init__(self, typeof: types.LexemeType, value: str):
@@ -26,31 +25,45 @@ class Lexeme:
 
 class Token:
     def __init__(self,
+                 kind: types.TokenKind,
                  typeof: types.TokenType,
                  value: TokenValue,
-                 unary: Optional[types.TokenType]
                  ):
+        self.kind = kind
         self.type = typeof
         self.value = value
-        self.unary = unary
 
     def __str__(self):
-        return f"Token(type={self.type.name}, value={repr(self.value)}, unary={repr(self.unary)})"
+        return f"Token(kind={self.kind.name}, type={self.type.name}, value={repr(self.value)})"
 
     __repr__ = __str__
 
 
-class FuncCall:
+class Func:
     """
-    This class is just a container for func call details.
-    Supposed to be kept in Token as a value
+    Func just represents some information about function call
     """
 
-    def __init__(self, name: str, args: List[Tokens]):
+    def __init__(self, name: str, argscount: int):
+        self.name = name
+        self.argscount = argscount
+
+    def __str__(self):
+        return f"Func(name={repr(self.name)}, argscount={self.argscount})"
+
+    __repr__ = __str__
+
+
+class FuncDef:
+    """
+    FuncDef represents function defining
+    """
+
+    def __init__(self, name: str, args: Tokens):
         self.name = name
         self.args = args
 
     def __str__(self):
-        return f"FuncCall(name={repr(self.name)}, args={repr(self.args)})"
+        return f"FuncDef(name={repr(self.name)}, args=({','.join(arg.value for arg in self.args)}))"
 
     __repr__ = __str__
