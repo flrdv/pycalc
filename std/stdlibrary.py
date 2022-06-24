@@ -11,10 +11,12 @@ stdnamespace = {
 
     "write": lambda target, value: target.write(value),
     "print": stdio.print_,
+    "println": stdio.println_,
 
     "malloc": stdmem.mem_alloc,
     "get": stdmem.mem_get,
     "set": stdmem.mem_set,
+    "sizeof": len,
 
     "map": map,
     "filter": filter,
