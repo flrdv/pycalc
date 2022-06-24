@@ -1,13 +1,14 @@
-from math import pi, sqrt
+from math import pi
 from unittest import TestCase, TestSuite, makeSuite
 
+from pycalc.tokentypes.tokens import Function
 from pycalc.interpreter.interpret import Interpreter
 
 
 interpreter = Interpreter()
 basic_namespace = {
     "pi": pi,
-    "sqrt": sqrt
+    "rt": lambda a, b: a ** (1/b)
 }
 
 evaluate = lambda code: interpreter.interpret(code, basic_namespace)
@@ -115,11 +116,50 @@ class TestOperatorsPriority(TestCase):
         self.assertEqual(evaluate("-2**2"), -4)
 
 
-class TestEvaluation(TestCase):
-    pass
+class TestVariables(TestCase):
+    def test_get_pi(self):
+        self.assertEqual(evaluate("pi"), pi)
+
+    def test_negotate_pi(self):
+        self.assertEqual(evaluate("-pi"), -pi)
+
+    def test_expression_with_constant(self):
+        self.assertEqual(evaluate("pi+2.0-3"), pi + 2 - 3)
+        self.assertEqual(evaluate("2.0+pi-3"), 2 + pi - 3)
+        self.assertEqual(evaluate("2.0-3+pi"), 2 - 3 + pi)
+
+    def test_declare_var(self):
+        self.assertEqual(evaluate("a=5+5"), 10)
+
+    def test_get_declared_var(self):
+        self.assertEqual(evaluate("a"), 10)
+
+
+class TestFunctions(TestCase):
+    def test_funccall(self):
+        self.assertEqual(evaluate("rt(25, 2)"), 5)
+
+    def test_nested_funccall(self):
+        self.assertEqual(evaluate("rt(rt(625, 2), 2)"), 5)
+
+    def test_expr_in_funccall(self):
+        self.assertEqual(evaluate("rt(20+5, 1.0+1.0)"), 5)
+
+    def test_funcdef(self):
+        self.assertIsInstance(evaluate("f(x,y)=x*y"), Function)
+
+    def test_def_func_call(self):
+        evaluate("f(x,y)=x*y")
+        self.assertEqual(evaluate("f(2,5)"), 10)
+
+    def test_def_func_argexpr(self):
+        evaluate("f(x,y)=x*y")
+        self.assertEqual(evaluate("f(2+5, 3*2)"), 42)
 
 
 evaluation_tests = TestSuite()
 evaluation_tests.addTest(makeSuite(TestNumbers))
 evaluation_tests.addTest(makeSuite(TestBasicOperations))
 evaluation_tests.addTest(makeSuite(TestOperatorsPriority))
+evaluation_tests.addTest(makeSuite(TestVariables))
+evaluation_tests.addTest(makeSuite(TestFunctions))
