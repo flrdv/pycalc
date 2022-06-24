@@ -8,7 +8,14 @@ from pycalc.tokentypes.types import PRIORITIES_TABLE, TokenKind, TokenType, Stac
 class ABCBuilder(ABC):
     @abstractmethod
     def build(self, tokens: Tokens) -> Stack:
-        ...
+        """
+        Builder receives tokens directly from tokenizer. These tokens
+        already must be parsed into:
+            - Identifiers
+            - Variables
+            - Unary tokens
+            - Function calls and defines
+        """
 
 
 class SortingStationBuilder(ABCBuilder):

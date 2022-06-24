@@ -23,7 +23,14 @@ class _ParserState(enum.IntEnum):
 class ABCTokenizer(ABC):
     @abstractmethod
     def tokenize(self, data: str) -> Tokens:
-        ...
+        """
+        Tokenizer is 2 in 1: lexer+parser. Lexer is just a generator
+        that yields lexemes (strings that are single language piece).
+        Parser parses unary, marks identifiers (for example, variable
+        names), function calls (counts arguments function call provides)
+        and function defines (creates FuncDef token with all the args
+        and name function takes; also OP_EQ is ignored in this case)
+        """
 
 
 def tokenize(data: str) -> Tokens:

@@ -49,7 +49,12 @@ class NamespaceStack(Stack):
 class ABCInterpreter(ABC):
     @abstractmethod
     def interpret(self, code: str, namespace: Namespace) -> Value:
-        ...
+        """
+        Receives expression as a string and basic namespace.
+        This namespace will be in the beginning of the namespaces stack
+        Returns the last one element in a stack (if multiple left SyntaxError
+        will be raised)
+        """
 
 
 class Interpreter(ABCInterpreter):
