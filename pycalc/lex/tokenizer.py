@@ -153,7 +153,7 @@ class Tokenizer(ABCTokenizer):
 
         for token in ops:
             if token.value not in UNARY_OPERATORS:
-                raise SyntaxError(f"disallowed unary: {token.value}")
+                raise SyntaxError(f"illegal unary: {token.value}")
 
             subs += token.value == '-'
 
@@ -213,7 +213,7 @@ class Tokenizer(ABCTokenizer):
                     state = _ParserState.FUNCNAME
                     continue
                 elif token.type != TokenType.VAR:
-                    raise SyntaxError(f"disallowed argument identifier: {repr(token.value)}")
+                    raise SyntaxError(f"illegal argument identifier: {repr(token.value)}")
 
                 funcdef.args.append(token)
                 token.type = TokenType.IDENTIFIER
