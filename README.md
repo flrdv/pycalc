@@ -1,3 +1,4 @@
+[![wakatime](https://wakatime.com/badge/user/b4a2ea9a-a721-41c8-b704-79b9b8cec646/project/3e68a432-deec-4dab-ba8a-a5f424e91eed.svg)](https://wakatime.com/badge/user/b4a2ea9a-a721-41c8-b704-79b9b8cec646/project/3e68a432-deec-4dab-ba8a-a5f424e91eed)
 # pycalc
 Simple calculator on python, written in academic purposes. Uses Sorting Station Algorithm for building reverse polish notation stack. Supports all kinds of operations python supports (except bool operations like or, not, etc. but they will be implemented as a functions of std-library), functions defining, variables declarations, etc.
 
@@ -23,7 +24,7 @@ $ python3 repl.py -e "40+2"
 I personally allow you to use: integers, floats, constants, and functions (including defining). For example:
 ```
 f(x,y)=x+y
-40 + rt(25, 5) - pi + 0.14 << f(1,2)
+40 + rt(25, 5) - pi + 0.14 / .14 << f(1,2)
 ```
 
 # Documentation
@@ -53,7 +54,7 @@ Or even: `-+--++--+-++--+++-+1 == -1`
 ## Numbers
 Internally number is mostly float (sometimes int). There are 3 types of numbers:
 - integers (example: `42`)
-- floats (example: `0.42`, exponenta is not supported)
+- floats (example: `0.42`, or even `.5` (that is simply `0.5`); exponenta is not supported)
 - hexdecimals (example: `0x5f3759df`)
 
 ## Variables
@@ -80,6 +81,16 @@ For example:
 f(x)=x+5;x
 ```
 How do you think, what will `f(1)` return? Correct, value of `x`. `x+5` does nothing, so result of this expression will be removed from the stack after semicolon
+
+### Higher-order functions
+PyCalc supports even this. Higher-order function is a function that returns another function.
+For example: 
+```
+f(a) = y(b) = a * b
+mulBy5 = f(5)
+mulBy5(5)
+```
+This example will return `10`
 
 ### Functions calling
 To call a function, simply type `<name>(<args>)`.

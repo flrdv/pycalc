@@ -31,7 +31,7 @@ class SortingStationBuilder(ABCBuilder):
             args_counters = self._count_args(expr)[::-1]
 
             for i, token in enumerate(expr):
-                if token.type in (TokenType.NUMBER, TokenType.IDENTIFIER):
+                if token.kind == TokenKind.NUMBER or token.type == TokenType.IDENTIFIER:
                     output.append(token)
                 elif token.type == TokenType.VAR:
                     if i < len(expr)-1 and expr[i+1].type == TokenType.LBRACE:
@@ -55,6 +55,8 @@ class SortingStationBuilder(ABCBuilder):
                         stack.top.kind in (TokenKind.OPERATOR, TokenKind.UNARY_OPERATOR, TokenKind.FUNC)
                         and
                         token_priority <= priority[stack.top.type]
+                        and
+                        stack.top.type != TokenType.OP_POW
                     ):
                         output.append(stack.pop())
 

@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Union, Callable
 
 from . import types
 
@@ -65,5 +65,20 @@ class FuncDef:
 
     def __str__(self):
         return f"FuncDef(name={repr(self.name)}, args=({','.join(arg.value for arg in self.args)}))"
+
+    __repr__ = __str__
+
+
+class Function:
+    def __init__(self, name: str, target: Callable):
+        self.name = name
+        self.target = target
+
+    @property
+    def __call__(self):
+        return self.target
+
+    def __str__(self):
+        return self.name
 
     __repr__ = __str__

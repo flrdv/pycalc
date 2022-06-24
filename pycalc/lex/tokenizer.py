@@ -10,10 +10,14 @@ from pycalc.tokentypes.types import (LexemeType, TokenType, TokenKind,
                                      OPERATORS_TABLE, UNARY_OPERATORS)
 
 
-_IDENTIFIER_MARK_STATE = enum.Enum(
-    "IDENTIFIER_MARK_STATE",
-    "ARGS_IDENTIFIER ARGS_COMMA MET_EQ FUNCNAME FREEITER"
-)
+class _ParserState(enum.IntEnum):
+    ARG = 1
+    LAMBDA_ARG = 2
+    ARG_COMMA = 3
+    LAMBDA_ARG_COMMA = 4
+    EQ = 5
+    FUNCNAME = 6
+    OTHER = 7
 
 
 class ABCTokenizer(ABC):
@@ -95,19 +99,33 @@ class Tokenizer(ABCTokenizer):
         buffer: Tokens = []
 
         if tokens[0].kind == TokenKind.OPERATOR:
-            buffer.append(tokens[0])
+            for i, token in enumerate(tokens):
+                if token.kind != TokenKind.OPERATOR:
+                    tokens = tokens[i:]
+                    break
+
+                buffer.append(token)
+
+            unary = self._calculate_final_unary(buffer)
+            output.append(Token(
+                kind=TokenKind.UNARY_OPERATOR,
+                typeof=unary,
+                value="+" if unary == TokenType.UN_POS else "-"
+            ))
+            buffer.clear()
         else:
             output.append(tokens[0])
+            tokens = tokens[1:]
 
-        for token in tokens[1:]:
+        for token in tokens:
             if buffer:
                 if token.kind == TokenKind.OPERATOR:
                     buffer.append(token)
                 else:
                     output.append(buffer[0])
-                    unary = self._calculate_final_unary(buffer[1:])
 
-                    if unary:
+                    if buffer[1:]:
+                        unary = self._calculate_final_unary(buffer[1:])
                         output.append(Token(
                             kind=TokenKind.UNARY_OPERATOR,
                             typeof=unary,
@@ -127,15 +145,15 @@ class Tokenizer(ABCTokenizer):
         return output
 
     @staticmethod
-    def _calculate_final_unary(ops: Tokens) -> Optional[TokenType]:
+    def _calculate_final_unary(ops: Tokens) -> TokenType:
         if not ops:
-            return None
+            raise ValueError("_calculate_final_query(): ops are empty")
 
         subs = 0
 
         for token in ops:
             if token.value not in UNARY_OPERATORS:
-                raise SyntaxError(f"disallowed unary: {token.value}")
+                raise SyntaxError(f"illegal unary: {token.value}")
 
             subs += token.value == '-'
 
@@ -163,19 +181,8 @@ class Tokenizer(ABCTokenizer):
 
     @staticmethod
     def _mark_identifiers(tokens: Tokens) -> Tokens:
-        """
-        Just look for OP_EQ
-            - If token in the left:
-                - closing brace:
-                    - mark everything until opening brace as identifier
-                - variable:
-                    - mark as IDENTIFIER
-                - anything else:
-                    - raise exception
-        """
-
         output = []
-        state = _IDENTIFIER_MARK_STATE.FREEITER
+        state = _ParserState.OTHER
         funcdef = FuncDef("", [])
         eq = Token(
             kind=TokenKind.OPERATOR,
@@ -184,41 +191,41 @@ class Tokenizer(ABCTokenizer):
         )
 
         for i, token in enumerate(tokens[::-1]):
-            if state == _IDENTIFIER_MARK_STATE.FREEITER:
+            if state == _ParserState.OTHER:
                 if token.type == TokenType.OP_EQ:
-                    state = _IDENTIFIER_MARK_STATE.MET_EQ
+                    state = _ParserState.EQ
                 else:
                     output.append(token)
-            elif state == _IDENTIFIER_MARK_STATE.MET_EQ:
+            elif state == _ParserState.EQ:
                 if token.type == TokenType.VAR:
                     token.type = TokenType.IDENTIFIER
-                    state = _IDENTIFIER_MARK_STATE.FREEITER
+                    state = _ParserState.OTHER
                     output.append(eq)
                     output.append(token)
                 elif token.type == TokenType.RBRACE:
-                    state = _IDENTIFIER_MARK_STATE.ARGS_IDENTIFIER
+                    state = _ParserState.ARG
                 else:
                     raise SyntaxError(f"cannot assign to {repr(token.value)}")
-            elif state == _IDENTIFIER_MARK_STATE.ARGS_IDENTIFIER:
+            elif state == _ParserState.ARG:
                 if token.type == TokenType.OP_COMMA:
                     raise SyntaxError("double comma")
                 elif token.type == TokenType.LBRACE:
-                    state = _IDENTIFIER_MARK_STATE.FUNCNAME
+                    state = _ParserState.FUNCNAME
                     continue
                 elif token.type != TokenType.VAR:
-                    raise SyntaxError(f"disallowed argument identifier: {repr(token.value)}")
+                    raise SyntaxError(f"illegal argument identifier: {repr(token.value)}")
 
                 funcdef.args.append(token)
                 token.type = TokenType.IDENTIFIER
-                state = _IDENTIFIER_MARK_STATE.ARGS_COMMA
-            elif state == _IDENTIFIER_MARK_STATE.ARGS_COMMA:
+                state = _ParserState.ARG_COMMA
+            elif state == _ParserState.ARG_COMMA:
                 if token.type == TokenType.LBRACE:
-                    state = _IDENTIFIER_MARK_STATE.FUNCNAME
+                    state = _ParserState.FUNCNAME
                 elif token.type != TokenType.OP_COMMA:
                     raise SyntaxError(f"expected comma, got {repr(token.value)}")
                 else:
-                    state = _IDENTIFIER_MARK_STATE.ARGS_IDENTIFIER
-            elif state == _IDENTIFIER_MARK_STATE.FUNCNAME:
+                    state = _ParserState.ARG
+            elif state == _ParserState.FUNCNAME:
                 if token.type not in (TokenType.IDENTIFIER, TokenType.VAR):
                     raise SyntaxError(f"cannot assign func name to {repr(token.value)}")
 
@@ -230,7 +237,7 @@ class Tokenizer(ABCTokenizer):
                     value=funcdef
                 ))
                 funcdef = FuncDef("", [])
-                state = _IDENTIFIER_MARK_STATE.FREEITER
+                state = _ParserState.OTHER
 
         if funcdef.name or funcdef.args:
             raise SyntaxError("strange shit happened")
@@ -253,8 +260,11 @@ class Tokenizer(ABCTokenizer):
 
             return get_lexeme(LexemeType.HEXNUMBER)
         elif raw_lexeme[0] in string.digits + ".":
-            if len(raw_lexeme) == raw_lexeme.count("."):
+            if len(raw_lexeme) == raw_lexeme.count(".") or raw_lexeme.count(".") > 1:
                 raise SyntaxError("invalid float: " + raw_lexeme)
+
+            if "." in raw_lexeme:
+                return get_lexeme(LexemeType.FLOAT)
 
             return get_lexeme(LexemeType.NUMBER)
         elif raw_lexeme == "(":
@@ -284,13 +294,19 @@ class Tokenizer(ABCTokenizer):
         if lexeme.type == LexemeType.NUMBER:
             return Token(
                 kind=TokenKind.NUMBER,
-                typeof=TokenType.NUMBER,
+                typeof=TokenType.INTEGER,
+                value=int(lexeme.value)
+            )
+        elif lexeme.type == LexemeType.FLOAT:
+            return Token(
+                kind=TokenKind.NUMBER,
+                typeof=TokenType.FLOAT,
                 value=float(lexeme.value)
             )
         elif lexeme.type == LexemeType.HEXNUMBER:
             return Token(
                 kind=TokenKind.NUMBER,
-                typeof=TokenType.NUMBER,
+                typeof=TokenType.INTEGER,
                 value=int(lexeme.value[2:], 16)
             )
         elif lexeme.type == LexemeType.LITERAL:
