@@ -146,7 +146,17 @@ class TestFunctions(TestCase):
         self.assertEqual(evaluate("rt(20+5, 1.0+1.0)"), 5)
 
     def test_funcdef(self):
-        self.assertIsInstance(evaluate("f(x,y)=x*y"), Function)
+        func_a = evaluate("a()=5")
+        self.assertIsInstance(func_a, Function)
+        self.assertEqual(func_a.name, "a()")
+
+        func_b = evaluate("b(x)=x+1")
+        self.assertIsInstance(func_b, Function)
+        self.assertEqual(func_b.name, "b(x)")
+
+        func_c = evaluate("c(x,y)=x*y")
+        self.assertIsInstance(func_c, Function)
+        self.assertEqual(func_c.name, "c(x,y)")
 
     def test_def_func_call(self):
         evaluate("f(x,y)=x*y")
@@ -155,6 +165,24 @@ class TestFunctions(TestCase):
     def test_def_func_argexpr(self):
         evaluate("f(x,y)=x*y")
         self.assertEqual(evaluate("f(2+5, 3*2)"), 42)
+
+    def test_funcdef_argexpr(self):
+        with self.assertRaises(SyntaxError):
+            evaluate("f(x+1)=x+2")
+
+        with self.assertRaises(SyntaxError):
+            evaluate("f(1)=2")
+
+    def test_funcdef_missed_brace(self):
+        with self.assertRaises(SyntaxError):
+            evaluate("f(x=2")
+
+        with self.assertRaises(SyntaxError):
+            evaluate("fx)=2")
+
+    def test_funcdef_no_body(self):
+        with self.assertRaises(SyntaxError):
+            evaluate("f(x)=")
 
 
 evaluation_tests = TestSuite()
