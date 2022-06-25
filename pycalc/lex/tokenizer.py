@@ -238,7 +238,7 @@ class Tokenizer(ABCTokenizer):
                     if token.type == TokenType.OP_EQ:
                         state = _ParserState.EQ
                     else:
-                        output.append(token)
+                        state = _ParserState.OTHER
                 else:
                     funcdef.name = token.value
                     state = _ParserState.OTHER
@@ -249,6 +249,10 @@ class Tokenizer(ABCTokenizer):
                     typeof=TokenType.FUNCDEF,
                     value=funcdef
                 ))
+
+                if token.type not in (TokenType.IDENTIFIER, TokenType.VAR, TokenType.OP_EQ):
+                    output.append(token)
+
                 funcdef = FuncDef("", [], empty_stack)
 
         if funcdef.name or funcdef.args:
