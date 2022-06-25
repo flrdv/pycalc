@@ -143,11 +143,19 @@ class Interpreter(ABCInterpreter):
                     namespace=func_namespace,
                     name=token.value.name,
                     fargs=[tok.value for tok in token.value.args],
-                    body=expression[i+1:]
+                    body=token.value.body
                 )
-                namespaces.set(token.value.name, func)
 
-                return func
+                if token.value.name:
+                    # lambdas have no name, so their token.value.name
+                    # is just an empty string
+                    namespaces.set(token.value.name, func)
+
+                stack.append(Token(
+                    kind=TokenKind.FUNC,
+                    typeof=TokenType.FUNC,
+                    value=func
+                ))
             else:
                 raise SyntaxError(f"unknown token: {token.type.name}({token.value})")
 
