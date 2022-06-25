@@ -69,7 +69,8 @@ class TokenType(enum.IntEnum):
     FUNCCALL = 25
     FUNCDEF = 26
     FUNCNAME = 27
-    OTHER = 28
+    FUNC = 28
+    OTHER = 29
 
 
 OPERATORS_TABLE = {
