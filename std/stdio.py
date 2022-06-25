@@ -1,14 +1,14 @@
 from typing import List
 
 
-def print_(*numbers) -> int:
-    print(*[chr(int(num)) for num in numbers], sep="", end="")
+def print_(*values) -> int:
+    print(*values, sep="", end="")
 
     return 0
 
 
-def println_(*numbers) -> int:
-    print(*[chr(int(num)) for num in numbers], sep="", end="\n")
+def println_(*values) -> int:
+    print(*values, sep="", end="\n")
 
     return 0
 

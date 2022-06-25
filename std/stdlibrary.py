@@ -22,6 +22,8 @@ stdnamespace = {
     "print": stdio.print_,
     "println": stdio.println_,
     "input": stdio.input_,
+    "chr": chr,
+    "ord": ord,
 
     "malloc": stdmem.mem_alloc,
     "get": stdmem.mem_get,
