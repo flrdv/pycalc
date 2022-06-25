@@ -83,6 +83,10 @@ class Interpreter(ABCInterpreter):
 
         TokenType.OP_EQEQ:  operator.eq,
         TokenType.OP_NOTEQ: operator.ne,
+        TokenType.OP_GT:    operator.gt,
+        TokenType.OP_GE:    operator.ge,
+        TokenType.OP_LT:    operator.lt,
+        TokenType.OP_LE:   operator.le,
 
         TokenType.OP_POW: operator.pow,
     }

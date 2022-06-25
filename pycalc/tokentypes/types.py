@@ -60,6 +60,10 @@ class TokenType(enum.IntEnum):
     OP_FLOORDIV = 16
     OP_SEMICOLON = 17
     OP_COMMA = 18
+    OP_GT = 30
+    OP_GE = 31
+    OP_LT = 32
+    OP_LE = 33
     UN_POS = 19
     UN_NEG = 20
     LBRACE = 21
@@ -89,6 +93,10 @@ OPERATORS_TABLE = {
 
     "==": TokenType.OP_EQEQ,
     "!=": TokenType.OP_NOTEQ,
+    ">": TokenType.OP_GT,
+    ">=": TokenType.OP_GE,
+    "<": TokenType.OP_LT,
+    "<=": TokenType.OP_LE,
 
     ";": TokenType.OP_SEMICOLON,
     "=": TokenType.OP_EQ,
@@ -128,6 +136,10 @@ PRIORITIES_TABLE = {
     TokenType.OP_EQ:        Priorities.NONE,
     TokenType.OP_EQEQ:      Priorities.NONE,
     TokenType.OP_NOTEQ:     Priorities.NONE,
+    TokenType.OP_GT:        Priorities.NONE,
+    TokenType.OP_GE:        Priorities.NONE,
+    TokenType.OP_LT:        Priorities.NONE,
+    TokenType.OP_LE:        Priorities.NONE,
     TokenType.OP_COMMA:     Priorities.NONE,
     TokenType.OP_SEMICOLON: Priorities.NONE,
 }
