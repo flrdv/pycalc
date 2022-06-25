@@ -17,8 +17,8 @@ def mem_get(mem: List[int], offset: int) -> int:
 
 
 def mem_set(mem: List[int], offset: int, value: int) -> int:
-    if 0 > offset >= len(mem) or 0 > value > 255:
+    if 0 > offset or offset >= len(mem) or 0 > value > 255:
         return -1
 
-    mem[int(offset)] = value
+    mem[offset] = value
     return 0
