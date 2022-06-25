@@ -34,7 +34,12 @@ class NamespaceStack(Stack):
         raise NameNotFoundError(var)
 
     def set(self, key: str, value: NamespaceValue):
-        self.top[key] = value
+        for namespace in self[::-1]:
+            if key in namespace:
+                namespace[key] = value
+                break
+        else:
+            self.top[key] = value
 
     def copy(self) -> "NamespaceStack":
         return NamespaceStack(super().copy())
