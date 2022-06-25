@@ -39,4 +39,5 @@ stdnamespace = {
     "reduce": reduce,
     "while": stdstatements.while_,
     "if": stdstatements.if_else,
+    "branch": stdstatements.branch,
 }
