@@ -7,14 +7,13 @@ from typing import List, Iterator, Tuple, Callable, Optional
 
 from pycalc.tokentypes.tokens import Lexeme, Lexemes, Token, Tokens, FuncDef
 from pycalc.tokentypes.types import (LexemeType, TokenType, TokenKind,
-                                     OPERATORS_TABLE, UNARY_OPERATORS)
+                                     OPERATORS_TABLE, UNARY_OPERATORS,
+                                     Stack)
 
 
 class _ParserState(enum.IntEnum):
     ARG = 1
-    LAMBDA_ARG = 2
     ARG_COMMA = 3
-    LAMBDA_ARG_COMMA = 4
     EQ = 5
     FUNCNAME = 6
     OTHER = 7
@@ -186,11 +185,11 @@ class Tokenizer(ABCTokenizer):
 
         raise SyntaxError("invalid operator: " + raw_op[0])
 
-    @staticmethod
-    def _mark_identifiers(tokens: Tokens) -> Tokens:
+    def _mark_identifiers(self, tokens: Tokens) -> Tokens:
         output = []
         state = _ParserState.OTHER
-        funcdef = FuncDef("", [])
+        empty_stack = Stack()
+        funcdef = FuncDef("", [], empty_stack)
         eq = Token(
             kind=TokenKind.OPERATOR,
             typeof=TokenType.OP_EQ,
@@ -234,22 +233,61 @@ class Tokenizer(ABCTokenizer):
                     state = _ParserState.ARG
             elif state == _ParserState.FUNCNAME:
                 if token.type not in (TokenType.IDENTIFIER, TokenType.VAR):
-                    raise SyntaxError(f"cannot assign func name to {repr(token.value)}")
+                    funcdef.name = ""
 
-                funcdef.name = token.value
+                    if token.type == TokenType.OP_EQ:
+                        state = _ParserState.EQ
+                    else:
+                        output.append(token)
+                else:
+                    funcdef.name = token.value
+                    state = _ParserState.OTHER
+
                 funcdef.args.reverse()
                 output.append(Token(
                     kind=TokenKind.FUNC,
                     typeof=TokenType.FUNCDEF,
                     value=funcdef
                 ))
-                funcdef = FuncDef("", [])
-                state = _ParserState.OTHER
+                funcdef = FuncDef("", [], empty_stack)
 
         if funcdef.name or funcdef.args:
             raise SyntaxError("strange shit happened")
 
-        return output[::-1]
+        return self._fill_funcbodies(output[::-1])
+
+    @staticmethod
+    def _fill_funcbodies(tokens: Tokens) -> Tokens:
+        output: Tokens = []
+        bodybuff = []
+        lbraces = 0
+
+        for token in tokens:
+            if bodybuff:
+                if token.type == TokenType.LBRACE:
+                    lbraces += 1
+                    bodybuff.append(token)
+                elif lbraces and token.type == TokenType.RBRACE:
+                    lbraces -= 1
+                    bodybuff.append(token)
+                elif not lbraces and token.type in (TokenType.OP_COMMA, TokenType.RBRACE):
+                    bodybuff[0].value.body = bodybuff[1:]
+                    output.append(bodybuff[0])
+                    output.append(token)
+                    bodybuff.clear()
+                else:
+                    bodybuff.append(token)
+            else:
+                if token.type == TokenType.FUNCDEF:
+                    bodybuff.append(token)
+                else:
+                    output.append(token)
+
+        if bodybuff:
+            bodybuff[0].value.body = bodybuff[1:]
+            output.append(bodybuff[0])
+
+        return output
 
     @staticmethod
     def _get_op_lexeme(op: str) -> Lexeme:
