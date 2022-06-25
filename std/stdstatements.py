@@ -15,3 +15,10 @@ def if_else(
 
 def _if(condition: Number, cb: Callable) -> int:
     return cb() if condition else 0
+
+
+def while_(condition: Callable, body: Callable) -> int:
+    while condition():
+        body()
+
+    return 0

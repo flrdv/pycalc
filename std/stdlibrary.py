@@ -37,5 +37,6 @@ stdnamespace = {
     "map": _as_list(map),
     "filter": _as_list(filter),
     "reduce": reduce,
+    "while": stdstatements.while_,
     "if": stdstatements.if_else,
 }
