@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Iterator, List
 
-from pycalc.tokentypes.tokens import Token, Tokens, Func
+from pycalc.tokentypes.tokens import Token, Tokens, Func, FuncDef
 from pycalc.tokentypes.types import PRIORITIES_TABLE, TokenKind, TokenType, Stack
 
 
@@ -47,7 +47,15 @@ class SortingStationBuilder(ABCBuilder):
                     else:
                         output.append(token)
                 elif token.type == TokenType.FUNCDEF:
-                    output.append(token)
+                    output.append(Token(
+                        kind=token.kind,
+                        typeof=token.type,
+                        value=FuncDef(
+                            name=token.value.name,
+                            args=token.value.args,
+                            body=self.build(token.value.body)
+                        )
+                    ))
                 elif token.type == TokenType.OP_COMMA:
                     try:
                         while stack.top.type != TokenType.LBRACE:
@@ -131,7 +139,7 @@ class SortingStationBuilder(ABCBuilder):
             if waitforcomma:
                 if token.type == TokenType.OP_COMMA:
                     waitforcomma = False
-            else:
+            elif token.kind != TokenKind.BRACE:
                 result[0] += 1
                 waitforcomma = True
 
