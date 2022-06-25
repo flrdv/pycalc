@@ -34,7 +34,12 @@ class NamespaceStack(Stack):
         raise NameNotFoundError(var)
 
     def set(self, key: str, value: NamespaceValue):
-        self.top[key] = value
+        for namespace in self[::-1]:
+            if key in namespace:
+                namespace[key] = value
+                break
+        else:
+            self.top[key] = value
 
     def copy(self) -> "NamespaceStack":
         return NamespaceStack(super().copy())
@@ -49,7 +54,12 @@ class NamespaceStack(Stack):
 class ABCInterpreter(ABC):
     @abstractmethod
     def interpret(self, code: str, namespace: Namespace) -> Value:
-        ...
+        """
+        Receives expression as a string and basic namespace.
+        This namespace will be in the beginning of the namespaces stack
+        Returns the last one element in a stack (if multiple left SyntaxError
+        will be raised)
+        """
 
 
 class Interpreter(ABCInterpreter):
@@ -138,11 +148,19 @@ class Interpreter(ABCInterpreter):
                     namespace=func_namespace,
                     name=token.value.name,
                     fargs=[tok.value for tok in token.value.args],
-                    body=expression[i+1:]
+                    body=token.value.body
                 )
-                namespaces.set(token.value.name, func)
 
-                return func
+                if token.value.name:
+                    # lambdas have no name, so their token.value.name
+                    # is just an empty string
+                    namespaces.set(token.value.name, func)
+
+                stack.append(Token(
+                    kind=TokenKind.FUNC,
+                    typeof=TokenType.FUNC,
+                    value=func
+                ))
             else:
                 raise SyntaxError(f"unknown token: {token.type.name}({token.value})")
 

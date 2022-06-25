@@ -1,10 +1,17 @@
-from pycalc.tokentypes.types import ArgumentsError
+from typing import List
 
 
-def print_(*floats) -> int:
-    if any(not num.is_integer() for num in floats):
-        raise ArgumentsError("print() takes only integers")
-
-    print(*[chr(int(num)) for num in floats], sep="", end="")
+def print_(*values) -> int:
+    print(*values, sep="", end="")
 
     return 0
+
+
+def println_(*values) -> int:
+    print(*values, sep="", end="\n")
+
+    return 0
+
+
+def input_() -> List[int]:
+    return list(map(ord, input()))

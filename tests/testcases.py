@@ -1,17 +1,13 @@
 from math import pi
 from unittest import TestCase, TestSuite, makeSuite
 
+from std.stdlibrary import stdnamespace
 from pycalc.tokentypes.tokens import Function
 from pycalc.interpreter.interpret import Interpreter
 
 
 interpreter = Interpreter()
-basic_namespace = {
-    "pi": pi,
-    "rt": lambda a, b: a ** (1/b)
-}
-
-evaluate = lambda code: interpreter.interpret(code, basic_namespace)
+evaluate = lambda code: interpreter.interpret(code, stdnamespace)
 
 
 class TestNumbers(TestCase):
@@ -185,9 +181,38 @@ class TestFunctions(TestCase):
             evaluate("f(x)=")
 
 
+class TestLambdas(TestCase):
+    def test_assign_to_var(self):
+        func = evaluate("a=(x)=x+1")
+        self.assertIsInstance(func, Function)
+        self.assertEqual(evaluate("a(1)"), 2)
+
+    def test_lambda_as_argument(self):
+        sum_func = evaluate("sum(mem)=reduce((x,y)=x+y, mem)")
+        range_func = evaluate("range(begin, end) = i=begin-1; map((x)=i=i+1;x+i, malloc(end-begin))")
+        self.assertIsInstance(sum_func, Function)
+        self.assertIsInstance(range_func, Function)
+        self.assertEqual(evaluate("sum(range(0,5))"), 10)
+
+    def test_missing_brace_in_arglambda(self):
+        with self.assertRaises(SyntaxError):
+            evaluate("sum(mem)=reduce(x,y)=x+y, mem)")
+
+        with self.assertRaises(SyntaxError):
+            evaluate("sum(mem)=reduce((x,y=x+y, mem)")
+
+    def test_missing_brace_in_vardecl_lambda(self):
+        with self.assertRaises(SyntaxError):
+            evaluate("a=(x=x+1")
+
+        with self.assertRaises(SyntaxError):
+            evaluate("a=x)=x+1")
+
+
 evaluation_tests = TestSuite()
 evaluation_tests.addTest(makeSuite(TestNumbers))
 evaluation_tests.addTest(makeSuite(TestBasicOperations))
 evaluation_tests.addTest(makeSuite(TestOperatorsPriority))
 evaluation_tests.addTest(makeSuite(TestVariables))
 evaluation_tests.addTest(makeSuite(TestFunctions))
+evaluation_tests.addTest(makeSuite(TestLambdas))
