@@ -5,8 +5,9 @@ from . import stdmem, stdstatements, stdio
 
 
 stdnamespace = {
-    "sqrt": sqrt,
-    "cbrt": lambda a, b: a ** (b/3),
+    "rt": lambda a, b: a ** (1/b),
+    "sqrt": lambda a: a ** (1/2),
+    "cbrt": lambda a: a ** (1/3),
     "pi": pi,
 
     "write": lambda target, value: target.write(value),
@@ -17,6 +18,7 @@ stdnamespace = {
     "get": stdmem.mem_get,
     "set": stdmem.mem_set,
     "sizeof": len,
+    "call": lambda func: func(),
 
     "map": map,
     "filter": filter,
