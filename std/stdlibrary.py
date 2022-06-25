@@ -1,7 +1,15 @@
-from math import pi, sqrt
+from math import pi
 from functools import reduce
+from typing import Callable, Iterable
 
 from . import stdmem, stdstatements, stdio
+
+
+def _as_list(func: Callable) -> Callable[[Callable, Iterable], list]:
+    def decorator(a: Callable, b: Iterable) -> list:
+        return list(func(a, b))
+
+    return decorator
 
 
 stdnamespace = {
@@ -20,8 +28,8 @@ stdnamespace = {
     "sizeof": len,
     "call": lambda func: func(),
 
-    "map": map,
-    "filter": filter,
-    "reduce": reduce,
+    "map": _as_list(map),
+    "filter": _as_list(filter),
+    "reduce": _as_list(reduce),
     "if": stdstatements.if_else,
 }
