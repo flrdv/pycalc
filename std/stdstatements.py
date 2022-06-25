@@ -1,14 +1,17 @@
-from typing import Callable
+from typing import Callable, Optional
 
 from pycalc.tokentypes.types import Number
 
 
-def cond(condition: Callable, if_cb: Callable, else_cb: Callable) -> Number:
-    return if_cb() if condition() else else_cb()
+def if_else(
+        condition: Number,
+        if_cb: Callable,
+        else_cb: Optional[Callable] = None) -> Number:
+    if else_cb is None:
+        return _if(condition, if_cb)
+
+    return if_cb() if condition else else_cb()
 
 
-def if_(condition: Callable, cb: Callable) -> int:
-    if condition():
-        cb()
-
-    return 0
+def _if(condition: Number, cb: Callable) -> int:
+    return cb() if condition else 0

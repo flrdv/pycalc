@@ -23,6 +23,5 @@ stdnamespace = {
     "map": map,
     "filter": filter,
     "reduce": reduce,
-    "cond": stdstatements.cond,
-    "if": stdstatements.if_,
+    "if": stdstatements.if_else,
 }
