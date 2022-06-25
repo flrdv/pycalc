@@ -69,7 +69,10 @@ def script_exec_mode(filename: str):
 
     with fd:
         for line in fd:
-            interpreter.interpret(line, stdnamespace)
+            line = line.strip()
+
+            if line:
+                interpreter.interpret(line, stdnamespace)
 
 
 if __name__ == '__main__':
@@ -85,7 +88,7 @@ if __name__ == '__main__':
         print("Available options:")
         print("\t-e, --execute <expression>: execute expression right from a command line")
         print("\t-s, --script <filename>.calc: execute program from a file")
-    if len(argv) == 3:
+    elif len(argv) == 3:
         option, value = argv[1:]
         options[option](value)
     else:
