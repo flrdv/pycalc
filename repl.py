@@ -74,9 +74,9 @@ def script_exec_mode(filename: str):
 
 if __name__ == '__main__':
     options = {
-        "-e": expr_exec_mode,
+        "-e":        expr_exec_mode,
         "--execute": expr_exec_mode,
-        "-s": script_exec_mode,
+        "-s":       script_exec_mode,
         "--script": script_exec_mode,
     }
 
@@ -87,7 +87,6 @@ if __name__ == '__main__':
         print("\t-s, --script <filename>.calc: execute program from a file")
     if len(argv) == 3:
         option, value = argv[1:]
-
         options[option](value)
     else:
         interactive_mode()
