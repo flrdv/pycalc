@@ -118,6 +118,7 @@ sqpow(2)
 
 ## Standard library
 ### Replacing basic statements
+---
 #### `if`
 Semantic:
 ```
@@ -133,6 +134,8 @@ if(a != 5, ()=println(chr(97)), ()=println(chr(65)))
 ```
 This example prints a or A, depending on whether true or false condition is
 
+---
+
 #### `map`
 Semantic:
 ```
@@ -145,6 +148,8 @@ Example:
 map(println, mem)
 ```
 Here map is the same as in python. So this example will just print all the values from `mem` (that is a result of `malloc()`)
+
+---
 
 #### `reduce`
 Semantic:
@@ -172,6 +177,8 @@ filter((x)=x>5, range(0,10))
 ```
 Result of this expression is array that contains ONLY numbers that are more than 5
 
+---
+
 ### IO
 #### `print`
 Semantic:
@@ -186,6 +193,8 @@ print(1, 2, 3)
 ```
 This example will print `1 2 3` WITHOUT newline in the end
 
+---
+
 #### `println`
 Semantic:
 ```
@@ -198,6 +207,8 @@ Example:
 println(1, 2, 3)
 ```
 This example will print `1 2 3` WITH newline in the end
+
+---
 
 #### `input`
 Semantic:
@@ -213,6 +224,8 @@ println(map(chr, text))
 ```
 This will wait for input, after that will print back everything you typed
 
+---
+
 #### `chr`
 Semantic:
 ```
@@ -226,6 +239,8 @@ println(chr(97))
 ```
 This example will print not number 97 (as it could be without `chr()`), but `a`, that in ascii has code 97
 
+---
+
 #### `ord`
 Semantic:
 ```
@@ -238,6 +253,8 @@ Example:
 ord(chr(97)) == 97
 ```
 In this example we make sure that `a` has code 97
+
+---
 
 ### Arrays
 #### `malloc`
@@ -254,6 +271,8 @@ println(mem)
 ```
 This example will print an array with length of 15 filled by zeroes
 
+---
+
 #### `get`
 Semantic:
 ```
@@ -267,6 +286,8 @@ mem = range(0, 8)
 get(mem, 4) == 5
 ```
 This example will make sure that element with index 4 equals 5 (indexes are as usually, starts with 0)
+
+---
 
 #### `set`
 Semantic:
@@ -283,6 +304,8 @@ get(mem, 0x1) == 0x15
 ```
 This example will make sure that after we set a value 0x15 with index 1, it really equals 0x15
 
+---
+
 #### `sizeof`
 Semantic:
 ```
@@ -295,6 +318,8 @@ Example:
 sizeof(malloc(15)) == 15
 ```
 This example will make sure that newly allocated array is length of 15
+
+---
 
 ### Other
 #### `rt`
@@ -309,6 +334,8 @@ Example:
 rt(25, 2) == 5
 ```
 
+---
+
 #### `sqrt`
 Semantic:
 ```
@@ -321,6 +348,8 @@ Example:
 sqrt(25) == 5
 ```
 
+---
+
 #### `cbrt`
 Semantic:
 ```
@@ -332,6 +361,8 @@ Example:
 ```
 cbrt(9) == 3
 ```
+
+---
 
 #### `pi`
 Semantic:
