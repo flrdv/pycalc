@@ -260,8 +260,7 @@ class Tokenizer(ABCTokenizer):
 
         return self._fill_funcbodies(output[::-1])
 
-    @staticmethod
-    def _fill_funcbodies(tokens: Tokens) -> Tokens:
+    def _fill_funcbodies(self, tokens: Tokens) -> Tokens:
         output: Tokens = []
         bodybuff = []
         lbraces = 0
@@ -275,7 +274,7 @@ class Tokenizer(ABCTokenizer):
                     lbraces -= 1
                     bodybuff.append(token)
                 elif not lbraces and token.type in (TokenType.OP_COMMA, TokenType.RBRACE):
-                    bodybuff[0].value.body = bodybuff[1:]
+                    bodybuff[0].value.body = self._fill_funcbodies(bodybuff[1:])
                     output.append(bodybuff[0])
                     output.append(token)
                     bodybuff.clear()
@@ -288,7 +287,7 @@ class Tokenizer(ABCTokenizer):
                     output.append(token)
 
         if bodybuff:
-            bodybuff[0].value.body = bodybuff[1:]
+            bodybuff[0].value.body = self._fill_funcbodies(bodybuff[1:])
             output.append(bodybuff[0])
 
         return output
