@@ -5,6 +5,10 @@ def mem_alloc(size: int) -> List[int]:
     return [0] * size
 
 
+def mem_allocfor(*values: int) -> List[int]:
+    return list(values)
+
+
 def mem_get(mem: List[int], offset: int) -> int:
     if 0 > offset >= len(mem):
         return -1
