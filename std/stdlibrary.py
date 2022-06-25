@@ -21,6 +21,7 @@ stdnamespace = {
     "write": lambda target, value: target.write(value),
     "print": stdio.print_,
     "println": stdio.println_,
+    "input": stdio.input_,
 
     "malloc": stdmem.mem_alloc,
     "get": stdmem.mem_get,
