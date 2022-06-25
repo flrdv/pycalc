@@ -92,8 +92,18 @@ mulBy5(5)
 ```
 This example will return `10`
 
-### Functions calling
+### Function calls
 To call a function, simply type `<name>(<args>)`.
 For example: `root(25, 5)`
 
 Function may have \[0, +∞) arguments, separated by comma. Function call has maximal priority (just like power)
+
+### Lambda
+Lambda is simply function without name. It can be defined directly as an argument for some function. Or just be a value for some variable.
+Syntax: 
+```(x, y) = x + y```
+For example: ```map((x)=x**2, range(0,10))```
+Or even: ```
+sqpow = (x)=x**2
+sqpow(2)
+```
