@@ -4,6 +4,7 @@ from unittest import TestCase, TestSuite, makeSuite
 from std.stdlibrary import stdnamespace
 from pycalc.tokentypes.tokens import Function
 from pycalc.interpreter.interpret import Interpreter
+from pycalc.tokentypes.types import InvalidSyntaxError
 
 
 interpreter = Interpreter()
@@ -17,6 +18,9 @@ class TestNumbers(TestCase):
     def test_float(self):
         self.assertEqual(evaluate("0.1"), 0.1)
         self.assertEqual(evaluate(".1"), 0.1)
+
+    def test_hexdecimal(self):
+        self.assertEqual(evaluate("0x175ffa14"), 0x175ffa14)
 
 
 class TestBasicOperations(TestCase):
@@ -69,6 +73,24 @@ class TestBasicOperations(TestCase):
     def test_equality(self):
         self.assertEqual(evaluate("2==2"), 1)
         self.assertEqual(evaluate("2!=2"), 0)
+
+    def test_less_than(self):
+        self.assertEqual(evaluate("1<2"), 1)
+        self.assertEqual(evaluate("2<1"), 0)
+
+    def test_less_equal(self):
+        self.assertEqual(evaluate("2<=3"), 1)
+        self.assertEqual(evaluate("2<=2"), 1)
+        self.assertEqual(evaluate("2<=1"), 0)
+
+    def test_more_than(self):
+        self.assertEqual(evaluate("2>1"), 1)
+        self.assertEqual(evaluate("1>2"), 0)
+
+    def test_more_equal(self):
+        self.assertEqual(evaluate("2>=1"), 1)
+        self.assertEqual(evaluate("2>=2"), 1)
+        self.assertEqual(evaluate("2>=3"), 0)
 
 
 class TestOperatorsPriority(TestCase):
@@ -163,21 +185,21 @@ class TestFunctions(TestCase):
         self.assertEqual(evaluate("f(2+5, 3*2)"), 42)
 
     def test_funcdef_argexpr(self):
-        with self.assertRaises(SyntaxError):
+        with self.assertRaises(InvalidSyntaxError):
             evaluate("f(x+1)=x+2")
 
-        with self.assertRaises(SyntaxError):
+        with self.assertRaises(InvalidSyntaxError):
             evaluate("f(1)=2")
 
     def test_funcdef_missed_brace(self):
-        with self.assertRaises(SyntaxError):
+        with self.assertRaises(InvalidSyntaxError):
             evaluate("f(x=2")
 
-        with self.assertRaises(SyntaxError):
+        with self.assertRaises(InvalidSyntaxError):
             evaluate("fx)=2")
 
     def test_funcdef_no_body(self):
-        with self.assertRaises(SyntaxError):
+        with self.assertRaises(InvalidSyntaxError):
             evaluate("f(x)=")
 
 
@@ -195,17 +217,17 @@ class TestLambdas(TestCase):
         self.assertEqual(evaluate("sum(range(0,5))"), 10)
 
     def test_missing_brace_in_arglambda(self):
-        with self.assertRaises(SyntaxError):
+        with self.assertRaises(InvalidSyntaxError):
             evaluate("sum(mem)=reduce(x,y)=x+y, mem)")
 
-        with self.assertRaises(SyntaxError):
+        with self.assertRaises(InvalidSyntaxError):
             evaluate("sum(mem)=reduce((x,y=x+y, mem)")
 
     def test_missing_brace_in_vardecl_lambda(self):
-        with self.assertRaises(SyntaxError):
+        with self.assertRaises(InvalidSyntaxError):
             evaluate("a=(x=x+1")
 
-        with self.assertRaises(SyntaxError):
+        with self.assertRaises(InvalidSyntaxError):
             evaluate("a=x)=x+1")
 
 
