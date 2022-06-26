@@ -13,12 +13,13 @@ class Lexeme:
     It may be: number, literal, operator, lbrace, rbrace
     """
 
-    def __init__(self, typeof: types.LexemeType, value: str):
+    def __init__(self, typeof: types.LexemeType, value: str, pos: int):
         self.type = typeof
         self.value = value
+        self.pos = pos
 
     def __str__(self):
-        return f"Lexeme(type={self.type.name}, value={repr(self.value)})"
+        return f"{self.type.name}:{self.pos}({repr(self.value)})"
 
     __repr__ = __str__
 
@@ -28,13 +29,15 @@ class Token:
                  kind: types.TokenKind,
                  typeof: types.TokenType,
                  value: TokenValue,
+                 pos: int
                  ):
         self.kind = kind
         self.type = typeof
         self.value = value
+        self.pos = pos
 
     def __str__(self):
-        return f"Token(kind={self.kind.name}, type={self.type.name}, value={repr(self.value)})"
+        return f"{self.kind.name}:{self.type.name}:{self.pos}({repr(self.value)})"
 
     __repr__ = __str__
 

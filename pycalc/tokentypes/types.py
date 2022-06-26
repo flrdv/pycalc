@@ -24,8 +24,8 @@ class LexemeType(enum.IntEnum):
     FLOAT = 3
     LITERAL = 4
     OPERATOR = 5
-    LBRACE = 6
-    RBRACE = 7
+    LPAREN = 6  # (
+    RPAREN = 7  # )
     DOT = 8
     COMMA = 9
 
@@ -35,7 +35,7 @@ class TokenKind(enum.IntEnum):
     LITERAL = 1
     OPERATOR = 2
     UNARY_OPERATOR = 3
-    BRACE = 4
+    PAREN = 4
     FUNC = 5
     OTHER = 6
 
@@ -60,10 +60,14 @@ class TokenType(enum.IntEnum):
     OP_FLOORDIV = 16
     OP_SEMICOLON = 17
     OP_COMMA = 18
+    OP_GT = 30
+    OP_GE = 31
+    OP_LT = 32
+    OP_LE = 33
     UN_POS = 19
     UN_NEG = 20
-    LBRACE = 21
-    RBRACE = 22
+    LPAREN = 21
+    RPAREN = 22
     VAR = 23
     IDENTIFIER = 24
     FUNCCALL = 25
@@ -89,6 +93,10 @@ OPERATORS_TABLE = {
 
     "==": TokenType.OP_EQEQ,
     "!=": TokenType.OP_NOTEQ,
+    ">": TokenType.OP_GT,
+    ">=": TokenType.OP_GE,
+    "<": TokenType.OP_LT,
+    "<=": TokenType.OP_LE,
 
     ";": TokenType.OP_SEMICOLON,
     "=": TokenType.OP_EQ,
@@ -128,14 +136,18 @@ PRIORITIES_TABLE = {
     TokenType.OP_EQ:        Priorities.NONE,
     TokenType.OP_EQEQ:      Priorities.NONE,
     TokenType.OP_NOTEQ:     Priorities.NONE,
+    TokenType.OP_GT:        Priorities.NONE,
+    TokenType.OP_GE:        Priorities.NONE,
+    TokenType.OP_LT:        Priorities.NONE,
+    TokenType.OP_LE:        Priorities.NONE,
     TokenType.OP_COMMA:     Priorities.NONE,
     TokenType.OP_SEMICOLON: Priorities.NONE,
 }
 
 
 class PyCalcError(Exception):
-    def __init__(self, message: str):
-        self.message = message
+    def __init__(self, message: str, pos: int):
+        self.pos = pos
         super().__init__(message)
 
 
@@ -148,4 +160,8 @@ class ArgumentsError(PyCalcError):
 
 
 class NameNotFoundError(PyCalcError):
+    pass
+
+
+class UnknownTokenError(PyCalcError):
     pass

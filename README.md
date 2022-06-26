@@ -118,7 +118,6 @@ sqpow(2)
 
 ## Standard library
 ### Replacing basic statements
----
 #### `if`
 Semantic:
 ```
@@ -133,6 +132,23 @@ if(a == 5, ()=println(chr(97)), ()=println(chr(65)))
 if(a != 5, ()=println(chr(97)), ()=println(chr(65)))
 ```
 This example prints a or A, depending on whether true or false condition is
+
+---
+
+#### `branch`
+Semantic:
+```
+branch(condition, callback[, ...[, callback]])
+```
+Returns: result of first true callback
+
+Example:
+```
+a = 6
+b = 7
+branch(a == 5, ()=1, b == 7, ()=2, ()=3) == 2
+```
+This example will make sure that second callback will be called as b == 7 is true. In other case, the last one callback will be called
 
 ---
 
@@ -210,6 +226,16 @@ This example will print `1 2 3` WITH newline in the end
 
 ---
 
+#### `printmem`
+
+Same as `print`, but prints memory values as a single string
+
+#### `printlnmem`
+
+Same as `println`, but prints memory values as a single string
+
+---
+
 #### `input`
 Semantic:
 ```
@@ -270,6 +296,22 @@ mem = malloc(15)
 println(mem)
 ```
 This example will print an array with length of 15 filled by zeroes
+
+---
+
+#### `mallocfor`
+Semantic:
+```
+mallocfor(values...)
+```
+Returns: memory filled with values instead of zeroes. Size of memory equals to number of given values
+
+Example:
+```
+text = mallocfor(72, 101, 108, 108, 111, 44, 32, 119, 111, 114, 108, 100, 33)
+printlnmem(text)
+```
+This is hello world
 
 ---
 

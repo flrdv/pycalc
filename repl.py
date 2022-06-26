@@ -1,8 +1,9 @@
 from typing import Optional
 from sys import argv, stdin as _stdin, stdout as _stdout
 
-from pycalc.interpreter import interpret
 from std.stdlibrary import stdnamespace
+from pycalc.interpreter import interpret
+from pycalc.tokentypes.types import PyCalcError
 
 PROMPT = ">> "
 
@@ -29,8 +30,12 @@ class InteractiveShell:
 
             try:
                 self._print(stdout, self.interpreter.interpret(expression, stdnamespace))
+            except PyCalcError as exc:
+                self._print(stdout, expression)
+                self._print(stdout, " " * exc.pos + "^")
+                self._print(stdout, f"<repl>:0:{exc.pos}: {exc.__class__.__name__}: {exc}")
             except Exception as exc:
-                self._print(stdout, exc.__class__.__name__ + ":", exc)
+                self._print(stdout, f"<repl>:0:?: {exc.__class__.__name__}: {exc}")
 
     @staticmethod
     def _input(stdin) -> str:
@@ -51,7 +56,14 @@ def interactive_mode():
 
 
 def expr_exec_mode(expr: str):
-    print(interpret.Interpreter().interpret(expr, stdnamespace))
+    try:
+        print(interpret.Interpreter().interpret(expr, stdnamespace))
+    except PyCalcError as exc:
+        print(expr)
+        print(" " * exc.pos + "^")
+        print(f"<cli>:0:{exc.pos}: {exc.__class__.__name__} {exc}")
+    except Exception as exc:
+        print(f"<cli>:0:?: {exc.__class__.__name__}: {exc}")
 
 
 def script_exec_mode(filename: str):
@@ -68,8 +80,20 @@ def script_exec_mode(filename: str):
     interpreter = interpret.Interpreter()
 
     with fd:
-        for line in fd:
-            interpreter.interpret(line, stdnamespace)
+        for lineno, line in enumerate(fd, start=1):
+            line = line.strip()
+
+            if line:
+                try:
+                    interpreter.interpret(line, stdnamespace)
+                except PyCalcError as exc:
+                    print(line)
+                    print(" " * exc.pos + "^")
+                    print(f"{fd.name}:{lineno}:{exc.pos}: {exc.__class__.__name__}: {exc}")
+                    return
+                except Exception as exc:
+                    print(f"{fd.name}:{lineno}:?: {exc.__class__.__name__}: {exc}")
+                    return
 
 
 if __name__ == '__main__':
@@ -85,7 +109,7 @@ if __name__ == '__main__':
         print("Available options:")
         print("\t-e, --execute <expression>: execute expression right from a command line")
         print("\t-s, --script <filename>.calc: execute program from a file")
-    if len(argv) == 3:
+    elif len(argv) == 3:
         option, value = argv[1:]
         options[option](value)
     else:

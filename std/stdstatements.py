@@ -1,6 +1,7 @@
-from typing import Callable, Optional
+from itertools import islice
+from typing import Callable, Optional, Union
 
-from pycalc.tokentypes.types import Number
+from pycalc.tokentypes.types import Number, ArgumentsError
 
 
 def if_else(
@@ -15,3 +16,33 @@ def if_else(
 
 def _if(condition: Number, cb: Callable) -> int:
     return cb() if condition else 0
+
+
+def while_(condition: Callable, body: Callable) -> int:
+    while condition():
+        body()
+
+    return 0
+
+
+def branch(*values: Union[Number, Callable]) -> int:
+    """
+    This is also kind of if, but a bit better
+    """
+
+    if len(values) < 2 or callable(values[0]):
+        raise ArgumentsError("invalid arguments")
+
+    pairs = zip(
+        islice(values, None, None, 2),
+        islice(values, 1, None, 2)
+    )
+
+    for cond, callback in pairs:
+        if cond:
+            return callback()
+
+    if len(values) % 2:
+        return values[-1]()
+
+    return 0
