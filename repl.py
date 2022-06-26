@@ -8,6 +8,16 @@ from pycalc.tokentypes.types import PyCalcError
 PROMPT = ">> "
 
 
+def _format_exc(
+        expr: str,
+        exc: PyCalcError,
+        file: str = "<anonymous>",
+        lineno: int = 1) -> str:
+    return f"{expr}\n{' ' * exc.pos + '^'}\n" \
+           f"{file}:{lineno}:{exc.pos+1}: " \
+           f"{exc.__class__.__name__}: {exc}"
+
+
 class InteractiveShell:
     def __init__(self,
                  prompt: str = PROMPT,
@@ -31,9 +41,7 @@ class InteractiveShell:
             try:
                 self._print(stdout, self.interpreter.interpret(expression, stdnamespace))
             except PyCalcError as exc:
-                self._print(stdout, expression)
-                self._print(stdout, " " * exc.pos + "^")
-                self._print(stdout, f"<repl>:0:{exc.pos}: {exc.__class__.__name__}: {exc}")
+                self._print(stdout, _format_exc(expression, exc, file="<repl>"))
             except Exception as exc:
                 self._print(stdout, f"<repl>:0:?: {exc.__class__.__name__}: {exc}")
 
@@ -59,9 +67,7 @@ def expr_exec_mode(expr: str):
     try:
         print(interpret.Interpreter().interpret(expr, stdnamespace))
     except PyCalcError as exc:
-        print(expr)
-        print(" " * exc.pos + "^")
-        print(f"<cli>:0:{exc.pos}: {exc.__class__.__name__} {exc}")
+        print(_format_exc(expr, exc, file="<cli>"))
     except Exception as exc:
         print(f"<cli>:0:?: {exc.__class__.__name__}: {exc}")
 
@@ -87,9 +93,7 @@ def script_exec_mode(filename: str):
                 try:
                     interpreter.interpret(line, stdnamespace)
                 except PyCalcError as exc:
-                    print(line)
-                    print(" " * exc.pos + "^")
-                    print(f"{fd.name}:{lineno}:{exc.pos}: {exc.__class__.__name__}: {exc}")
+                    print(_format_exc(line, exc, file=fd.name, lineno=lineno))
                     return
                 except Exception as exc:
                     print(f"{fd.name}:{lineno}:?: {exc.__class__.__name__}: {exc}")
