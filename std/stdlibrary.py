@@ -16,6 +16,10 @@ stdnamespace = {
     "rt": lambda a, b: a ** (1/b),
     "sqrt": lambda a: a ** (1/2),
     "cbrt": lambda a: a ** (1/3),
+    "int": int,
+    "float": float,
+    "range": range,
+    "inv": lambda a: ~a,
     "pi": pi,
 
     "write": lambda target, value: target.write(value),
@@ -31,6 +35,7 @@ stdnamespace = {
     "mallocfor": stdmem.mem_allocfor,
     "get": stdmem.mem_get,
     "set": stdmem.mem_set,
+    "slice": stdmem.slice_,
     "sizeof": len,
     "call": lambda func: func(),
 
