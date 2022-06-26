@@ -6,9 +6,9 @@ from typing import Optional, Tuple, Union, List
 from pycalc.lex import tokenizer as _tokenizer
 from pycalc.stack import builder
 from pycalc.tokentypes.tokens import Token, Tokens, Function
-from pycalc.tokentypes.types import (TokenKind, TokenType, Stack,
-                                     Namespace, Number, NamespaceValue,
-                                     ArgumentsError, NameNotFoundError)
+from pycalc.tokentypes.types import (TokenKind, TokenType, Stack, Namespace,
+                                     Number, NamespaceValue, ArgumentsError,
+                                     NameNotFoundError)
 
 
 Value = Union[Number, Function]
@@ -31,7 +31,7 @@ class NamespaceStack(Stack):
             if var in namespace:
                 return namespace[var]
 
-        raise NameNotFoundError(var)
+        raise NameNotFoundError(var, -1)
 
     def set(self, key: str, value: NamespaceValue):
         for namespace in self[::-1]:
@@ -86,7 +86,7 @@ class Interpreter(ABCInterpreter):
         TokenType.OP_GT:    operator.gt,
         TokenType.OP_GE:    operator.ge,
         TokenType.OP_LT:    operator.lt,
-        TokenType.OP_LE:   operator.le,
+        TokenType.OP_LE:    operator.le,
 
         TokenType.OP_POW: operator.pow,
     }
@@ -117,11 +117,15 @@ class Interpreter(ABCInterpreter):
             if token.kind == TokenKind.NUMBER or token.type == TokenType.IDENTIFIER:
                 stack.append(token)
             elif token.type == TokenType.VAR:
-                stack.append(self._token(namespaces.get(token.value)))
+                try:
+                    stack.append(self._token(namespaces.get(token.value), i))
+                except NameNotFoundError as exc:
+                    raise NameNotFoundError(str(exc), i) from None
 
             elif token.kind == TokenKind.UNARY_OPERATOR:
                 stack.append(self._token(
-                    self.unary_executors[token.type](stack.pop().value)
+                    self.unary_executors[token.type](stack.pop().value),
+                    i
                 ))
 
             elif token.type == TokenType.OP_SEMICOLON:
@@ -137,13 +141,23 @@ class Interpreter(ABCInterpreter):
             elif token.kind == TokenKind.OPERATOR:
                 right, left = stack.pop(), stack.pop()
                 stack.append(self._token(
-                    self.executors[token.type](left.value, right.value)
+                    self.executors[token.type](left.value, right.value),
+                    i
                 ))
             elif token.type == TokenType.FUNCCALL:
-                func = namespaces.get(token.value.name)
+                try:
+                    func = namespaces.get(token.value.name)
+                except NameNotFoundError as exc:
+                    raise NameNotFoundError(str(exc), token.pos) from None
+
                 stack, args = self._get_func_args(token.value.argscount, stack)
-                call_result = func(*(arg.value for arg in args))
-                stack.append(self._token(call_result))
+
+                try:
+                    call_result = func(*(arg.value for arg in args))
+                except ArgumentsError as exc:
+                    raise ArgumentsError(str(exc), i) from None
+
+                stack.append(self._token(call_result, i))
             elif token.type == TokenType.FUNCDEF:
                 func_namespace = namespaces.copy()
                 func_namespace.add_namespace({})
@@ -163,7 +177,8 @@ class Interpreter(ABCInterpreter):
                 stack.append(Token(
                     kind=TokenKind.FUNC,
                     typeof=TokenType.FUNC,
-                    value=func
+                    value=func,
+                    pos=i
                 ))
             else:
                 raise SyntaxError(f"unknown token: {token.type.name}({token.value})")
@@ -182,14 +197,14 @@ class Interpreter(ABCInterpreter):
                         body: Stack) -> Function:
         def real_function(*args) -> Number:
             if not fargs and args:
-                raise ArgumentsError("function takes no arguments")
+                raise ArgumentsError("function takes no arguments", -1)
             if len(fargs) != len(args):
                 text = (
                     "not enough arguments",
                     "too much arguments"
                 )[len(fargs) < len(args)]
 
-                raise ArgumentsError(f"{text}: expected {len(fargs)}, got {len(args)}")
+                raise ArgumentsError(f"{text}: expected {len(fargs)}, got {len(args)}", -1)
 
             args_namespace = self._get_args_namespace(fargs, args)
 
@@ -202,24 +217,27 @@ class Interpreter(ABCInterpreter):
         )
 
     @staticmethod
-    def _token(num: Number) -> Token:
+    def _token(num: Number, pos: int) -> Token:
         if isinstance(num, int):
             return Token(
                 kind=TokenKind.NUMBER,
                 typeof=TokenType.INTEGER,
-                value=int(num)
+                value=int(num),
+                pos=pos
             )
         elif isinstance(num, float):
             return Token(
                 kind=TokenKind.NUMBER,
                 typeof=TokenType.FLOAT,
-                value=num
+                value=num,
+                pos=pos
             )
         else:
             return Token(
                 kind=TokenKind.OTHER,
                 typeof=TokenType.OTHER,
-                value=num
+                value=num,
+                pos=pos
             )
 
     @staticmethod
