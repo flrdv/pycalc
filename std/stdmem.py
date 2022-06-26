@@ -13,7 +13,7 @@ def mem_get(mem: List[int], offset: int) -> int:
     if 0 > offset >= len(mem):
         return -1
 
-    return mem[int(offset)]
+    return mem[offset]
 
 
 def mem_set(mem: List[int], offset: int, value: int) -> int:
@@ -22,3 +22,7 @@ def mem_set(mem: List[int], offset: int, value: int) -> int:
 
     mem[offset] = value
     return 0
+
+
+def slice_(mem: List[int], begin: int, offset: int) -> List[int]:
+    return mem[begin:begin+offset]
