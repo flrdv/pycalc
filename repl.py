@@ -28,10 +28,10 @@ class InteractiveShell:
 
     def session(self, stdin=_stdin, stdout=_stdout):
         while True:
-            self._print(stdout, end=self.prompt)
+            print(end=self.prompt, file=stdout)
 
             try:
-                expression = self._input(stdin)
+                expression = stdin.readline().strip()
             except KeyboardInterrupt:
                 return
 
@@ -39,19 +39,14 @@ class InteractiveShell:
                 continue
 
             try:
-                self._print(stdout, self.interpreter.interpret(expression, stdnamespace))
+                print(self.interpreter.interpret(expression, stdnamespace),
+                      file=stdout)
             except PyCalcError as exc:
-                self._print(stdout, _format_exc(expression, exc, file="<repl>"))
+                print(_format_exc(expression, exc, file="<repl>"),
+                      file=stdout)
             except Exception as exc:
-                self._print(stdout, f"<repl>:0:?: {exc.__class__.__name__}: {exc}")
-
-    @staticmethod
-    def _input(stdin) -> str:
-        return stdin.readline().rstrip()
-
-    @staticmethod
-    def _print(stdout, *args, **kwargs):
-        print(*args, **kwargs, file=stdout, flush=True)
+                print(f"<repl>:0:?: {exc.__class__.__name__}: {exc}",
+                      file=stdout)
 
 
 def interactive_mode():
