@@ -8,7 +8,7 @@ from pycalc.stack import builder
 from pycalc.tokentypes.tokens import Token, Tokens, Function
 from pycalc.tokentypes.types import (TokenKind, TokenType, Stack, Namespace,
                                      Number, NamespaceValue, ArgumentsError,
-                                     NameNotFoundError)
+                                     NameNotFoundError, NoCodeError)
 
 
 Value = Union[Number, Function]
@@ -31,7 +31,7 @@ class NamespaceStack(Stack):
             if var in namespace:
                 return namespace[var]
 
-        raise NameNotFoundError(var, -1)
+        raise NameNotFoundError(var, (-1, -1))
 
     def set(self, key: str, value: NamespaceValue):
         for namespace in self[::-1]:
@@ -104,13 +104,19 @@ class Interpreter(ABCInterpreter):
         """
 
         tokens = self.tokenizer.tokenize(code)
-        stack = self.stackbuilder.build(tokens)
+        stacks = self.stackbuilder.build(tokens)
         namespaces = NamespaceStack()
         namespaces.add_namespace(namespace)
 
-        return self._interpreter(stack, namespaces)
+        return self._interpreter(stacks, namespaces)
 
-    def _interpreter(self, expression: Stack, namespaces: NamespaceStack) -> Value:
+    def _interpreter(self, exprs: List[Stack], namespaces: NamespaceStack) -> Value:
+        if not exprs:
+            raise NoCodeError
+
+        return list(map(lambda expr: self._interpret_line(expr, namespaces), exprs))[-1]
+
+    def _interpret_line(self, expression: Stack, namespaces: NamespaceStack) -> Value:
         stack = Stack()
 
         for i, token in enumerate(expression):
@@ -118,14 +124,14 @@ class Interpreter(ABCInterpreter):
                 stack.append(token)
             elif token.type == TokenType.VAR:
                 try:
-                    stack.append(self._token(namespaces.get(token.value), i))
+                    stack.append(self._token(namespaces.get(token.value), token.pos))
                 except NameNotFoundError as exc:
-                    raise NameNotFoundError(str(exc), i) from None
+                    raise NameNotFoundError(str(exc), token.pos) from None
 
             elif token.kind == TokenKind.UNARY_OPERATOR:
                 stack.append(self._token(
                     self.unary_executors[token.type](stack.pop().value),
-                    i
+                    token.pos
                 ))
 
             elif token.type == TokenType.OP_SEMICOLON:
@@ -142,7 +148,7 @@ class Interpreter(ABCInterpreter):
                 right, left = stack.pop(), stack.pop()
                 stack.append(self._token(
                     self.executors[token.type](left.value, right.value),
-                    i
+                    token.pos
                 ))
             elif token.type == TokenType.FUNCCALL:
                 try:
@@ -155,9 +161,9 @@ class Interpreter(ABCInterpreter):
                 try:
                     call_result = func(*(arg.value for arg in args))
                 except ArgumentsError as exc:
-                    raise ArgumentsError(str(exc), i) from None
+                    raise ArgumentsError(str(exc), token.pos) from None
 
-                stack.append(self._token(call_result, i))
+                stack.append(self._token(call_result, token.pos))
             elif token.type == TokenType.FUNCDEF:
                 func_namespace = namespaces.copy()
                 func_namespace.add_namespace({})
@@ -178,7 +184,7 @@ class Interpreter(ABCInterpreter):
                     kind=TokenKind.FUNC,
                     typeof=TokenType.FUNC,
                     value=func,
-                    pos=i
+                    pos=token.pos
                 ))
             else:
                 raise SyntaxError(f"unknown token: {token.type.name}({token.value})")
@@ -197,19 +203,22 @@ class Interpreter(ABCInterpreter):
                         body: Stack) -> Function:
         def real_function(*args) -> Number:
             if not fargs and args:
-                raise ArgumentsError("function takes no arguments", -1)
+                raise ArgumentsError("function takes no arguments", (-1, -1))
             if len(fargs) != len(args):
                 text = (
                     "not enough arguments",
                     "too much arguments"
                 )[len(fargs) < len(args)]
 
-                raise ArgumentsError(f"{text}: expected {len(fargs)}, got {len(args)}", -1)
+                raise ArgumentsError(
+                    f"{text}: expected {len(fargs)}, got {len(args)}",
+                    (-1, -1)
+                )
 
             args_namespace = self._get_args_namespace(fargs, args)
 
             with namespace.with_add_namespace(args_namespace):
-                return self._interpreter(body, namespace)
+                return self._interpret_line(body, namespace)
 
         return Function(
             name=f"{name}({','.join(fargs)})",
@@ -217,7 +226,7 @@ class Interpreter(ABCInterpreter):
         )
 
     @staticmethod
-    def _token(num: Number, pos: int) -> Token:
+    def _token(num: Number, pos: Tuple[int, int]) -> Token:
         if isinstance(num, int):
             return Token(
                 kind=TokenKind.NUMBER,

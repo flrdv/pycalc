@@ -1,6 +1,6 @@
 import enum
 from string import ascii_letters
-from typing import Union, Dict, Callable
+from typing import Union, Dict, Callable, Tuple
 
 
 Number = Union[int, float]
@@ -28,6 +28,7 @@ class LexemeType(enum.IntEnum):
     RPAREN = 7  # )
     DOT = 8
     COMMA = 9
+    EOL = 10
 
 
 class TokenKind(enum.IntEnum):
@@ -146,7 +147,7 @@ PRIORITIES_TABLE = {
 
 
 class PyCalcError(Exception):
-    def __init__(self, message: str, pos: int):
+    def __init__(self, message: str, pos: Tuple[int, int]):
         self.pos = pos
         super().__init__(message)
 
@@ -164,4 +165,8 @@ class NameNotFoundError(PyCalcError):
 
 
 class UnknownTokenError(PyCalcError):
+    pass
+
+
+class NoCodeError(Exception):
     pass

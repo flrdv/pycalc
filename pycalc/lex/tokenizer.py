@@ -32,67 +32,73 @@ class ABCTokenizer(ABC):
         """
 
 
-def tokenize(data: str) -> Tokens:
-    if not data:
-        return []
-
-    tokenizer = Tokenizer()
-
-    return tokenizer.tokenize(data)
+def tokenize(data: str) -> List[Tokens]:
+    return Tokenizer().tokenize(data)
 
 
 class Tokenizer(ABCTokenizer):
-    def tokenize(self, data: str) -> Tokens:
+    def tokenize(self, data: str) -> List[Tokens]:
         if not data:
             return []
 
         lexemes: Lexemes = []
+        lineno = 0
 
         for element, is_op, pos in self._lex(data):
             if is_op:
-                op, unaries = self._parse_ops(element, pos)
+                op, unaries = self._parse_ops(element, lineno, pos)
                 lexemes.append(op)
                 lexemes.extend(unaries)
             else:
-                lexemes.append(self._parse_lexeme(element, pos))
+                if element == "\n":
+                    lineno += 1
 
-        unary = self._parse_unary(list(map(
-            self._lexeme2token, lexemes
-        )))
-        identifiers = self._mark_identifiers(unary)
+                lexemes.append(self._parse_lexeme(element, lineno, pos))
 
-        return identifiers
+        output: List[Tokens] = []
+
+        for line in self._split_lines(lexemes):
+            unary = self._parse_unary(list(map(
+                self._lexeme2token, line
+            )))
+            output.append(self._mark_identifiers(unary))
+
+        return output
 
     @staticmethod
     def _lex(data: str) -> Iterator[Tuple[str, bool, int]]:
-        buff: List[str] = [data[0]]
+        buff: List[str] = []
         operators_chars = set(reduce(add, OPERATORS_TABLE.keys()))
+        state = None
+        pos = 0
 
-        if data[0] == "(":
-            yield "(", False, 0
-            buff.clear()
-            state = False
-        else:
-            # True is operator, False is not operator
-            state = data[0] in operators_chars
+        for i, char in enumerate(data):
+            pos += 1
 
-        for i, char in enumerate(data[1:], start=1):
+            if state is None:
+                state = char in operators_chars
+
             if char == " ":
                 if buff:
-                    yield "".join(buff), state, i-len(buff)
+                    yield "".join(buff), state, pos
+                    buff.clear()
+            elif char == "\n":
+                if buff:
+                    yield "".join(buff), state, pos
                     buff.clear()
 
-                continue
-
-            if char in "()":
+                state = None
+                pos = 0
+                yield "\n", False, pos
+            elif char in "()":
                 if buff:
-                    yield "".join(buff), state, i-len(buff)
+                    yield "".join(buff), state, pos
 
-                yield char, False, i
+                yield char, False, pos
                 buff.clear()
             elif (char in operators_chars) + state == 1:
                 if buff:
-                    yield "".join(buff), state, i-len(buff)
+                    yield "".join(buff), state, pos
 
                 buff = [char]
                 state = not state
@@ -100,12 +106,36 @@ class Tokenizer(ABCTokenizer):
                 buff.append(char)
 
         if buff:
-            yield "".join(buff), state, len(data)-len(buff)
+            yield "".join(buff), state, pos
+
+    @staticmethod
+    def _split_lines(lexemes: Lexemes) -> List[Lexemes]:
+        output: List[Lexemes] = [[]]
+        parens = 0
+
+        for i, lexeme in enumerate(lexemes):
+            if lexeme.type == LexemeType.LPAREN:
+                parens += 1
+                output[-1].append(lexeme)
+            elif lexeme.type == LexemeType.RPAREN:
+                if not parens:
+                    raise InvalidSyntaxError("unexpected closing parenthesis", lexeme.pos)
+
+                parens -= 1
+                output[-1].append(lexeme)
+            elif lexeme.type == LexemeType.EOL:
+                if i > 0 and (lexemes[i-1].type == LexemeType.OPERATOR or parens):
+                    continue
+
+                output.append([])
+            else:
+                output[-1].append(lexeme)
+
+        return list(filter(bool, output))
 
     def _parse_unary(self, tokens: Tokens) -> Tokens:
         output: Tokens = []
         buffer: Tokens = []
-        i = -1
 
         if tokens[0].kind == TokenKind.OPERATOR:
             for i, token in enumerate(tokens):
@@ -120,7 +150,7 @@ class Tokenizer(ABCTokenizer):
                 kind=TokenKind.UNARY_OPERATOR,
                 typeof=unary,
                 value="+" if unary == TokenType.UN_POS else "-",
-                pos=0
+                pos=(tokens[0].pos[0], 0)
             ))
             buffer.clear()
         else:
@@ -140,7 +170,7 @@ class Tokenizer(ABCTokenizer):
                             kind=TokenKind.UNARY_OPERATOR,
                             typeof=unary,
                             value="+" if unary == TokenType.UN_POS else "-",
-                            pos=len(output)-1
+                            pos=buffer[-1].pos
                         ))
 
                     buffer.clear()
@@ -151,7 +181,10 @@ class Tokenizer(ABCTokenizer):
                 output.append(token)
 
         if buffer:
-            raise InvalidSyntaxError("unexpected operator in the end of the expression", buffer[-1].pos)
+            raise InvalidSyntaxError(
+                "unexpected operator in the end of the expression",
+                buffer[-1].pos
+            )
 
         return output
 
@@ -171,7 +204,7 @@ class Tokenizer(ABCTokenizer):
         # hehe, pretty tricky, isn't it?
         return TokenType.UN_NEG if subs & 1 else TokenType.UN_POS
 
-    def _parse_ops(self, raw_op: str, pos: int) -> Tuple[Lexeme, Lexemes]:
+    def _parse_ops(self, raw_op: str, lineno: int, pos: int) -> Tuple[Lexeme, Lexemes]:
         """
         Splits a string of operators into actual and
         unary operators
@@ -186,15 +219,18 @@ class Tokenizer(ABCTokenizer):
                 op_len -= 1
                 continue
 
-            oper = self._get_op_lexeme(op, pos)
+            oper = self._get_op_lexeme(op, lineno, pos)
             unaries = map(
-                lambda op_: self._get_op_lexeme(op_, pos+op_len),
+                lambda op_: self._get_op_lexeme(op_, lineno, pos+op_len),
                 raw_op[op_len:]
             )
 
             return oper, list(unaries)
 
-        raise InvalidSyntaxError("illegal operator: " + raw_op[0], pos)
+        raise InvalidSyntaxError(
+            f"illegal operator: {raw_op[0]}",
+            (lineno, pos)
+        )
 
     def _mark_identifiers(self, tokens: Tokens) -> Tokens:
         output = []
@@ -224,10 +260,13 @@ class Tokenizer(ABCTokenizer):
                 elif token.type == TokenType.RPAREN:
                     state = _ParserState.ARG
                 else:
-                    raise InvalidSyntaxError(f"cannot assign to {repr(token.value)}", len(tokens)-i-1)
+                    raise InvalidSyntaxError(
+                        f"cannot assign to {repr(token.value)}",
+                        token.pos
+                    )
             elif state == _ParserState.ARG:
                 if token.type == TokenType.OP_COMMA:
-                    raise InvalidSyntaxError("double comma", len(tokens)-i-1)
+                    raise InvalidSyntaxError("double comma", token.pos)
                 elif token.type == TokenType.LPAREN:
                     state = _ParserState.FUNCNAME
                     continue
@@ -246,7 +285,7 @@ class Tokenizer(ABCTokenizer):
                 elif token.type != TokenType.OP_COMMA:
                     raise InvalidSyntaxError(
                         f"expected comma, got {repr(token.value)}",
-                        len(tokens)-i
+                        token.pos
                     )
                 else:
                     state = _ParserState.ARG
@@ -262,21 +301,21 @@ class Tokenizer(ABCTokenizer):
                     funcdef.name = token.value
                     state = _ParserState.OTHER
 
+                line, column = token.pos
+                column += bool(funcdef.name)
+
                 funcdef.args.reverse()
                 output.append(Token(
                     kind=TokenKind.FUNC,
                     typeof=TokenType.FUNCDEF,
                     value=funcdef,
-                    pos=len(tokens)-i-1
+                    pos=(line, column)
                 ))
 
                 if token.type not in (TokenType.IDENTIFIER, TokenType.VAR, TokenType.OP_EQ):
                     output.append(token)
 
                 funcdef = FuncDef("", [], empty_stack)
-
-        if funcdef.name or funcdef.args:
-            raise InvalidSyntaxError("strange shit happened", len(tokens)-1)
 
         return self._fill_funcbodies(output[::-1])
 
@@ -313,24 +352,30 @@ class Tokenizer(ABCTokenizer):
         return output
 
     @staticmethod
-    def _get_op_lexeme(op: str, pos: int) -> Lexeme:
+    def _get_op_lexeme(op: str, lineno: int, pos: int) -> Lexeme:
         return Lexeme(
             typeof=LexemeType.OPERATOR,
             value=op,
-            pos=pos
+            pos=(lineno, pos)
         )
 
-    def _parse_lexeme(self, raw_lexeme: str, pos: int) -> Lexeme:
-        get_lexeme = self._lexeme_getter(raw_lexeme, pos)
+    def _parse_lexeme(self, raw_lexeme: str, lineno: int, pos: int) -> Lexeme:
+        get_lexeme = self._lexeme_getter(raw_lexeme, lineno, pos)
 
         if raw_lexeme.startswith("0x"):
             if len(raw_lexeme) == 2:
-                raise InvalidSyntaxError("invalid hexdecimal value: 0x", pos)
+                raise InvalidSyntaxError(
+                    "invalid hexdecimal value: 0x",
+                    (lineno, pos)
+                )
 
             return get_lexeme(LexemeType.HEXNUMBER)
         elif raw_lexeme[0] in string.digits + ".":
             if len(raw_lexeme) == raw_lexeme.count(".") or raw_lexeme.count(".") > 1:
-                raise InvalidSyntaxError("invalid float: " + raw_lexeme, pos)
+                raise InvalidSyntaxError(
+                    f"invalid float: {raw_lexeme}",
+                    (lineno, pos)
+                )
 
             if "." in raw_lexeme:
                 return get_lexeme(LexemeType.FLOAT)
@@ -340,16 +385,18 @@ class Tokenizer(ABCTokenizer):
             return get_lexeme(LexemeType.LPAREN)
         elif raw_lexeme == ")":
             return get_lexeme(LexemeType.RPAREN)
+        elif raw_lexeme == "\n":
+            return get_lexeme(LexemeType.EOL)
 
         return get_lexeme(LexemeType.LITERAL)
 
     @staticmethod
-    def _lexeme_getter(value: str, pos: int) -> Callable[[LexemeType], Lexeme]:
+    def _lexeme_getter(value: str, lineno: int, pos: int) -> Callable[[LexemeType], Lexeme]:
         def getter(typeof: LexemeType) -> Lexeme:
             return Lexeme(
                 typeof=typeof,
                 value=value,
-                pos=pos
+                pos=(lineno, pos)
             )
 
         return getter
