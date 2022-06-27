@@ -115,7 +115,7 @@ class Tokenizer(ABCTokenizer):
 
                 buffer.append(token)
 
-            unary = self._calculate_final_unary(buffer, i)
+            unary = self._calculate_final_unary(buffer)
             output.append(Token(
                 kind=TokenKind.UNARY_OPERATOR,
                 typeof=unary,
@@ -135,7 +135,7 @@ class Tokenizer(ABCTokenizer):
                     output.append(buffer[0])
 
                     if buffer[1:]:
-                        unary = self._calculate_final_unary(buffer[1:], i-len(buffer)+1)
+                        unary = self._calculate_final_unary(buffer[1:])
                         output.append(Token(
                             kind=TokenKind.UNARY_OPERATOR,
                             typeof=unary,
@@ -156,7 +156,7 @@ class Tokenizer(ABCTokenizer):
         return output
 
     @staticmethod
-    def _calculate_final_unary(ops: Tokens, pos: int) -> TokenType:
+    def _calculate_final_unary(ops: Tokens) -> TokenType:
         if not ops:
             raise ValueError("_calculate_final_query(): ops are empty")
 
@@ -164,7 +164,7 @@ class Tokenizer(ABCTokenizer):
 
         for i, token in enumerate(ops):
             if token.value not in UNARY_OPERATORS:
-                raise InvalidSyntaxError(f"illegal unary: {token.value}", pos+i+1)
+                raise InvalidSyntaxError(f"illegal unary: {token.value}", token.pos)
 
             subs += token.value == '-'
 
