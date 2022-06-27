@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Iterator, List
+from typing import Iterator, List, Tuple
 
 from pycalc.tokentypes.tokens import Token, Tokens, Func, FuncDef
 from pycalc.tokentypes.types import (PRIORITIES_TABLE, TokenKind, TokenType,
@@ -27,9 +27,8 @@ class SortingStationBuilder(ABCBuilder):
     def build(self, tokens: Tokens) -> Stack:
         output = Stack()
         divider = self._expr_divider(tokens)
-        current_pos = 0
 
-        for expr in divider:
+        for expr, semicolon_pos in divider:
             stack = Stack()
             args_counters = self._count_args(expr)[::-1]
 
@@ -102,12 +101,11 @@ class SortingStationBuilder(ABCBuilder):
 
                 output.append(stack.pop())
 
-            current_pos += len(expr)
             output.append(Token(
                 kind=TokenKind.OPERATOR,
                 typeof=TokenType.OP_SEMICOLON,
                 value=";",
-                pos=current_pos
+                pos=semicolon_pos
             ))
 
         return output[:-1]  # remove trailing semicolon
@@ -160,15 +158,21 @@ class SortingStationBuilder(ABCBuilder):
         return result
 
     @staticmethod
-    def _expr_divider(expr: Tokens) -> Iterator[Tokens]:
+    def _expr_divider(expr: Tokens) -> Iterator[Tuple[Tokens, int]]:
+        """
+        Yields expression and semicolon index
+        """
+
         border = 0
 
         for i, token in enumerate(expr):
             if token.type == TokenType.OP_SEMICOLON:
-                yield expr[border:i]
+                yield expr[border:i], token.pos
                 border = i + 1
 
-        yield expr[border:]
+        # semicolon anyway cannot be in the end of the expression,
+        # in case it is, error will be raised even before this func
+        yield expr[border:], -1
 
     @staticmethod
     def _get_func(token: Token, argscount: int) -> Token:
