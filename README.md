@@ -37,5 +37,4 @@ f(x,y)=x+y
 ```
 
 # Documentation
-
-See documentation (here)[docs/]
+See documentation in `docs/` folder.
