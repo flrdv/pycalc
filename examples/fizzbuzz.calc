@@ -1,5 +1,4 @@
-print("Limit: ")
-limit_raw = input()
+limit_raw = input("Limit: ")
 limit = 0;
     get(map(
             (x) =
