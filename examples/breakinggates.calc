@@ -1,0 +1,18 @@
+print("1: ")
+src = input()
+print("2: ")
+modified = input()
+
+count(mem, char) =
+    len(filter(
+        (x) = x==char,
+        mem
+    ))
+
+extra = 0
+map(
+    (x) =
+        if(count(src, x) != count(modified, x), () = extra=x),
+    modified
+)
+println(chr(extra))
