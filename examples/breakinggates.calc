@@ -1,12 +1,10 @@
-print("1: ")
-src = input()
-print("2: ")
-modified = input()
+src = input("1: ")
+modified = input("2: ")
 
-count(mem, char) =
+count(string, char) =
     len(filter(
         (x) = x==char,
-        mem
+        string
     ))
 
 extra = 0
@@ -15,4 +13,4 @@ map(
         if(count(src, x) != count(modified, x), () = extra=x),
     modified
 )
-println(chr(extra))
+println(extra)
