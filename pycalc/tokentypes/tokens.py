@@ -37,7 +37,7 @@ class Token:
         self.pos = pos
 
     def __str__(self):
-        return f"{self.kind.name}:{self.type.name}:{self.pos}({repr(self.value)})"
+        return f"{self.kind.name}:{self.type.name}:{self.pos[1]}({repr(self.value)})"
 
     __repr__ = __str__
 
