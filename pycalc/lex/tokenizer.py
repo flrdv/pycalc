@@ -1,5 +1,6 @@
 import enum
 import string
+from functools import reduce
 from abc import ABC, abstractmethod
 from typing import List, Iterator, Tuple, Callable
 
@@ -488,8 +489,24 @@ class Tokenizer(ABCTokenizer):
             return Token(
                 kind=TokenKind.STRING,
                 typeof=TokenType.STRING,
-                value=lexeme.value[1:-1],
+                value=_prepare_string(lexeme.value[1:-1]),
                 pos=lexeme.pos
             )
 
         raise InvalidSyntaxError("unexpected lexeme type: " + lexeme.type.name, lexeme.pos)
+
+
+def _prepare_string(string_val: str) -> str:
+    replacements = {
+        "\\\"": "\"",
+        "\\n": "\n",
+        "\\r": "\r",
+        "\\t": "\t",
+        "\\b": "\b",
+        "\\f": "\f",
+        "\\v": "\v",
+        "\\0": "\0",
+        "\\\\": "\\"
+    }
+
+    return reduce(lambda a, b: a.replace(*b), replacements.items(), string_val)
