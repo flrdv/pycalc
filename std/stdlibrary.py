@@ -25,9 +25,7 @@ stdnamespace = {
     "write": lambda target, value: target.write(value),
     "print": stdio.print_,
     "println": stdio.println_,
-    "printmem": stdio.print_mem,
-    "printlnmem": stdio.println_mem,
-    "input": stdio.input_,
+    "input": input,
     "chr": chr,
     "ord": ord,
 

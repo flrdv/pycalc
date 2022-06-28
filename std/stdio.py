@@ -23,7 +23,3 @@ def println_mem(mem: List) -> int:
     print(*mem, sep="", end="\n")
 
     return 0
-
-
-def input_() -> List[int]:
-    return list(map(ord, input()))

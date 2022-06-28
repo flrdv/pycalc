@@ -1,4 +1,6 @@
 import enum
+from operator import add
+from functools import reduce
 from string import ascii_letters
 from typing import Union, Dict, Callable, Tuple, List, TypeVar
 
@@ -31,6 +33,7 @@ class LexemeType(enum.IntEnum):
     DOT = 8
     COMMA = 9
     EOL = 10
+    STRING = 11
 
 
 class TokenKind(enum.IntEnum):
@@ -40,7 +43,8 @@ class TokenKind(enum.IntEnum):
     UNARY_OPERATOR = 3
     PAREN = 4
     FUNC = 5
-    OTHER = 6
+    STRING = 6
+    OTHER = 7
 
 
 class TokenType(enum.IntEnum):
@@ -63,21 +67,23 @@ class TokenType(enum.IntEnum):
     OP_FLOORDIV = 16
     OP_SEMICOLON = 17
     OP_COMMA = 18
-    OP_GT = 30
-    OP_GE = 31
-    OP_LT = 32
-    OP_LE = 33
-    UN_POS = 19
-    UN_NEG = 20
-    LPAREN = 21
-    RPAREN = 22
-    VAR = 23
-    IDENTIFIER = 24
-    FUNCCALL = 25
-    FUNCDEF = 26
-    FUNCNAME = 27
-    FUNC = 28
-    OTHER = 29
+    OP_GT = 19
+    OP_GE = 20
+    OP_LT = 21
+    OP_LE = 22
+    OP_DOT = 35
+    UN_POS = 23
+    UN_NEG = 24
+    LPAREN = 25
+    RPAREN = 26
+    VAR = 27
+    IDENTIFIER = 28
+    FUNCCALL = 29
+    FUNCDEF = 30
+    FUNCNAME = 31
+    FUNC = 32
+    STRING = 33
+    OTHER = 34
 
 
 OPERATORS_TABLE = {
@@ -101,10 +107,14 @@ OPERATORS_TABLE = {
     "<": TokenType.OP_LT,
     "<=": TokenType.OP_LE,
 
+    ".": TokenType.OP_DOT,
+
     ";": TokenType.OP_SEMICOLON,
     "=": TokenType.OP_EQ,
     ",": TokenType.OP_COMMA
 }
+
+OPERATORS_CHARS = set(reduce(add, OPERATORS_TABLE.keys()))
 
 
 class Priorities(enum.IntEnum):
@@ -135,6 +145,7 @@ PRIORITIES_TABLE = {
     TokenType.OP_POW:   Priorities.MAXIMAL,
     TokenType.FUNCCALL: Priorities.MAXIMAL,
     TokenType.FUNCDEF:  Priorities.MAXIMAL,
+    TokenType.OP_DOT:   Priorities.MAXIMAL,
 
     TokenType.OP_EQ:        Priorities.NONE,
     TokenType.OP_EQEQ:      Priorities.NONE,

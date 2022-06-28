@@ -1,7 +1,4 @@
-printmem(map(chr, mallocfor(
-    76, 105, 109, 105, 116, 58, 32
-)))
-limit_raw = input()
+limit_raw = input("Limit: ")
 limit = 0;
     get(map(
             (x) =
@@ -11,23 +8,13 @@ limit = 0;
         len(limit_raw)-1
     )
 
-fizz = map(chr, mallocfor(
-    102, 105, 122, 122, 32
-))
-buzz = map(chr, mallocfor(
-    98, 117, 122, 122, 32
-))
-fizzbuzz = map(chr, mallocfor(
-    102, 105, 122, 122, 98, 117, 122, 122, 32
-))
-
 map(
     (x) =
         branch(
-            x % 15 == 0, () = printmem(fizzbuzz),
-            x % 3 == 0, () = printmem(fizz),
-            x % 5 == 0, () = printmem(buzz),
-            () = print(x, chr(32))
+            x % 15 == 0, () = print("fizzbuzz "),
+            x % 3 == 0, () = print("fizz "),
+            x % 5 == 0, () = print("buzz "),
+            () = print(x, " ")
         ),
     range(1, limit+1)
 )

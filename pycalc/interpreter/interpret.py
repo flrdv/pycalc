@@ -6,9 +6,9 @@ from typing import Optional, Tuple, Union, List
 from pycalc.lex import tokenizer as _tokenizer
 from pycalc.stack import builder
 from pycalc.tokentypes.tokens import Token, Tokens, Function
-from pycalc.tokentypes.types import (TokenKind, TokenType, Stack, Namespace,
-                                     Number, NamespaceValue, ArgumentsError,
-                                     NameNotFoundError, NoCodeError)
+from pycalc.tokentypes.types import (TokenKind, TokenType, Stack, Namespace, Number,
+                                     NamespaceValue, ArgumentsError, NameNotFoundError,
+                                     InvalidSyntaxError, NoCodeError)
 
 
 Value = Union[Number, Function]
@@ -81,6 +81,7 @@ class Interpreter(ABCInterpreter):
         TokenType.OP_BITWISE_OR:  operator.or_,
         TokenType.OP_BITWISE_XOR: operator.xor,
 
+        TokenType.OP_DOT:   getattr,
         TokenType.OP_EQEQ:  operator.eq,
         TokenType.OP_NOTEQ: operator.ne,
         TokenType.OP_GT:    operator.gt,
@@ -120,7 +121,8 @@ class Interpreter(ABCInterpreter):
         stack: Stack[Token] = Stack()
 
         for i, token in enumerate(expression):
-            if token.kind == TokenKind.NUMBER or token.type == TokenType.IDENTIFIER:
+            if token.kind in (TokenKind.NUMBER, TokenKind.STRING) \
+                    or token.type == TokenType.IDENTIFIER:
                 stack.append(token)
             elif token.type == TokenType.VAR:
                 try:
@@ -187,14 +189,20 @@ class Interpreter(ABCInterpreter):
                     pos=token.pos
                 ))
             else:
-                raise SyntaxError(f"unknown token: {token.type.name}({token.value})")
+                raise InvalidSyntaxError(
+                    f"unknown token: {token.type.name}({token.value})",
+                    token.pos
+                )
 
         result = stack.pop()
 
         if stack:
-            raise SyntaxError("multiple values left in stack")
+            raise InvalidSyntaxError("multiple values left in stack", stack[0].pos)
 
         return result.value
+
+    def _import(self, path: str):
+        ...
 
     def _spawn_function(self,
                         namespace: NamespaceStack,
