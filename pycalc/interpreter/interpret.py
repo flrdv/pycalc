@@ -14,7 +14,7 @@ from pycalc.tokentypes.types import (TokenKind, TokenType, Stack, Namespace,
 Value = Union[Number, Function]
 
 
-class NamespaceStack(Stack):
+class NamespaceStack(Stack[dict]):
     def add_namespaces(self, *namespaces: Namespace):
         for namespace in namespaces:
             self.append(namespace)
@@ -110,14 +110,14 @@ class Interpreter(ABCInterpreter):
 
         return self._interpreter(stacks, namespaces)
 
-    def _interpreter(self, exprs: List[Stack], namespaces: NamespaceStack) -> Value:
+    def _interpreter(self, exprs: List[Stack[Token]], namespaces: NamespaceStack) -> Value:
         if not exprs:
             raise NoCodeError
 
         return list(map(lambda expr: self._interpret_line(expr, namespaces), exprs))[-1]
 
-    def _interpret_line(self, expression: Stack, namespaces: NamespaceStack) -> Value:
-        stack = Stack()
+    def _interpret_line(self, expression: Stack[Token], namespaces: NamespaceStack) -> Value:
+        stack: Stack[Token] = Stack()
 
         for i, token in enumerate(expression):
             if token.kind == TokenKind.NUMBER or token.type == TokenType.IDENTIFIER:
@@ -130,7 +130,7 @@ class Interpreter(ABCInterpreter):
 
             elif token.kind == TokenKind.UNARY_OPERATOR:
                 stack.append(self._token(
-                    self.unary_executors[token.type](stack.pop().value),
+                    self.unary_executors[token.type](stack.pop().value),  # noqa
                     token.pos
                 ))
 
@@ -200,7 +200,7 @@ class Interpreter(ABCInterpreter):
                         namespace: NamespaceStack,
                         name: str,
                         fargs: List[str],
-                        body: Stack) -> Function:
+                        body: Stack[Token]) -> Function:
         def real_function(*args) -> Number:
             if not fargs and args:
                 raise ArgumentsError("function takes no arguments", (-1, -1))
@@ -250,7 +250,7 @@ class Interpreter(ABCInterpreter):
             )
 
     @staticmethod
-    def _get_func_args(argscount: int, stack: Stack) -> Tuple[Stack, Tokens]:
+    def _get_func_args(argscount: int, stack: Stack[Token]) -> Tuple[Stack[Token], Tokens]:
         if not argscount:
             return stack, []
 

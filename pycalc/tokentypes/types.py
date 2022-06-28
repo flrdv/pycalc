@@ -1,6 +1,6 @@
 import enum
 from string import ascii_letters
-from typing import Union, Dict, Callable, Tuple
+from typing import Union, Dict, Callable, Tuple, List, TypeVar
 
 
 Number = Union[int, float]
@@ -10,8 +10,10 @@ Namespace = Dict[str, NamespaceValue]
 UNARY_OPERATORS = {"+", "-"}
 ALLOWED_LITERALS = ascii_letters + "_"
 
+T = TypeVar("T")
 
-class Stack(list):
+
+class Stack(List[T]):
     @property
     def top(self):
         return self[-1]

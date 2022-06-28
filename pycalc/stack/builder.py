@@ -8,7 +8,7 @@ from pycalc.tokentypes.types import (PRIORITIES_TABLE, TokenKind, TokenType,
 
 class ABCBuilder(ABC):
     @abstractmethod
-    def build(self, tokens: List[Tokens]) -> List[Stack]:
+    def build(self, tokens: List[Tokens]) -> List[Stack[Token]]:
         """
         Builder receives tokens directly from tokenizer. These tokens
         already must be parsed into:
@@ -24,15 +24,15 @@ class SortingStationBuilder(ABCBuilder):
     This is a reference implementation of Sorting Station Algorithm
     """
 
-    def build(self, tokens: List[Tokens]) -> List[Stack]:
+    def build(self, tokens: List[Tokens]) -> List[Stack[Token]]:
         return list(map(self._build_line, tokens))
 
     def _build_line(self, tokens: Tokens) -> Stack:
-        output = Stack()
+        output: Stack[Token] = Stack()
         divider = self._expr_divider(tokens)
 
         for expr, semicolon_pos in divider:
-            stack = Stack()
+            stack: Stack[Token] = Stack()
             args_counters = self._count_args(expr)[::-1]
 
             for i, token in enumerate(expr):
