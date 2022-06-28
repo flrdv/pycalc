@@ -36,7 +36,7 @@ stdnamespace = {
     "get": stdmem.mem_get,
     "set": stdmem.mem_set,
     "slice": stdmem.slice_,
-    "sizeof": len,
+    "len": len,
     "call": lambda func: func(),
 
     "map": _as_list(map),

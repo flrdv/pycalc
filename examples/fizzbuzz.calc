@@ -8,7 +8,7 @@ limit = 0;
                 limit = (limit*10) + (x-48),
             limit_raw
         ),
-        sizeof(limit_raw)-1
+        len(limit_raw)-1
     )
 
 fizz = map(chr, mallocfor(
@@ -29,6 +29,6 @@ map(
             x % 5 == 0, () = printmem(buzz),
             () = print(x, chr(32))
         ),
-    range(1, limit)
+    range(1, limit+1)
 )
 println()
