@@ -1,8 +1,35 @@
-arrMake(size, bytesize) = malloc(size*bytesize)
-arrGet(arr, index, bytesize) = reduce((x,y)=x+(y<<8), slice(arr, index, bytesize))
-arrSet(arr, index, bytesize, value) = map((x)=set(arr, index+x, value >> (x<<3) & 0xff), range(0, bytesize)); 0
+uint8 = 2
+uint16 = 4
+uint32 = 8
+uint64 = 16
 
-mem = arrMake(1, 4)
+arrMake(size, bytesize) = malloc(size*bytesize)
+
+arrGet(arr, index, bytesize) =
+    reduce(
+        (x, y) = x + (y<<8),
+        slice(arr, index*bytesize, bytesize)
+    )
+
+arrSet(arr, index, bytesize, value) =
+    index=index*bytesize;
+    map(
+        (x) = set(arr, index+x, value >> (x<<3) & 0xff),
+        range(0, bytesize)
+    );
+    0
+arrMap(arr, func, bytesize) =
+    map(
+        (x) = func(arrGet(arr, x, bytesize)),
+        range(0, len(arr)//bytesize)
+    );
+    0
+
+mem = arrMake(4, 4)
 arrSet(mem, 0, 4, 32754)
+arrSet(mem, 1, 4, 167)
+arrSet(mem, 3, 4, 12765)
 println(mem)
-println(arrGet(mem, 0, 3))
+println(arrGet(mem, 0, 4))
+arrMap(mem, (x)=print(x, chr(32)), 4)
+println()

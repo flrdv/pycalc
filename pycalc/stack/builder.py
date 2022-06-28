@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Iterator, List
+from typing import Iterator, List, Tuple
 
 from pycalc.tokentypes.tokens import Token, Tokens, Func, FuncDef
 from pycalc.tokentypes.types import (PRIORITIES_TABLE, TokenKind, TokenType,
@@ -8,7 +8,7 @@ from pycalc.tokentypes.types import (PRIORITIES_TABLE, TokenKind, TokenType,
 
 class ABCBuilder(ABC):
     @abstractmethod
-    def build(self, tokens: Tokens) -> Stack:
+    def build(self, tokens: List[Tokens]) -> List[Stack[Token]]:
         """
         Builder receives tokens directly from tokenizer. These tokens
         already must be parsed into:
@@ -24,13 +24,15 @@ class SortingStationBuilder(ABCBuilder):
     This is a reference implementation of Sorting Station Algorithm
     """
 
-    def build(self, tokens: Tokens) -> Stack:
-        output = Stack()
-        divider = self._expr_divider(tokens)
-        current_pos = 0
+    def build(self, tokens: List[Tokens]) -> List[Stack[Token]]:
+        return list(map(self._build_line, tokens))
 
-        for expr in divider:
-            stack = Stack()
+    def _build_line(self, tokens: Tokens) -> Stack:
+        output: Stack[Token] = Stack()
+        divider = self._expr_divider(tokens)
+
+        for expr, semicolon_pos in divider:
+            stack: Stack[Token] = Stack()
             args_counters = self._count_args(expr)[::-1]
 
             for i, token in enumerate(expr):
@@ -49,18 +51,24 @@ class SortingStationBuilder(ABCBuilder):
                         value=FuncDef(
                             name=token.value.name,
                             args=token.value.args,
-                            body=self.build(token.value.body)
+                            body=self._build_line(token.value.body)
                         ),
                         pos=token.pos
                     ))
                 elif token.type == TokenType.OP_COMMA:
+                    if not stack:
+                        raise InvalidSyntaxError(
+                            "missing left parenthesis or comma",
+                            token.pos
+                        )
+
                     try:
                         while stack.top.type != TokenType.LPAREN:
                             output.append(stack.pop())
                     except IndexError:
                         raise InvalidSyntaxError(
                             "missing left parenthesis or comma",
-                            i
+                            output[-1].pos
                         ) from None
                 elif token.kind in (TokenKind.OPERATOR, TokenKind.UNARY_OPERATOR):
                     priority = PRIORITIES_TABLE
@@ -79,13 +87,19 @@ class SortingStationBuilder(ABCBuilder):
                 elif token.type == TokenType.LPAREN:
                     stack.append(token)
                 elif token.type == TokenType.RPAREN:
+                    if not stack:
+                        raise InvalidSyntaxError(
+                            "missing opening parenthesis",
+                            token.pos
+                        )
+
                     try:
                         while stack.top.type != TokenType.LPAREN:
                             output.append(stack.pop())
                     except IndexError:
                         raise InvalidSyntaxError(
                             "missing opening parenthesis",
-                            i
+                            output[-1].pos
                         ) from None
 
                     stack.pop()
@@ -94,7 +108,7 @@ class SortingStationBuilder(ABCBuilder):
                         # it's a function!
                         output.append(self._get_func(stack.pop(), args_counters.pop()))
                 else:
-                    raise UnknownTokenError(f"unknown token: {token}", i)
+                    raise UnknownTokenError(f"unknown token: {token}", token.pos)
 
             while stack:
                 if stack.top.type == TokenType.LPAREN:
@@ -102,12 +116,11 @@ class SortingStationBuilder(ABCBuilder):
 
                 output.append(stack.pop())
 
-            current_pos += len(expr)
             output.append(Token(
                 kind=TokenKind.OPERATOR,
                 typeof=TokenType.OP_SEMICOLON,
                 value=";",
-                pos=current_pos
+                pos=semicolon_pos
             ))
 
         return output[:-1]  # remove trailing semicolon
@@ -160,15 +173,21 @@ class SortingStationBuilder(ABCBuilder):
         return result
 
     @staticmethod
-    def _expr_divider(expr: Tokens) -> Iterator[Tokens]:
+    def _expr_divider(expr: Tokens) -> Iterator[Tuple[Tokens, Tuple[int, int]]]:
+        """
+        Yields expression and semicolon index
+        """
+
         border = 0
 
         for i, token in enumerate(expr):
             if token.type == TokenType.OP_SEMICOLON:
-                yield expr[border:i]
+                yield expr[border:i], token.pos
                 border = i + 1
 
-        yield expr[border:]
+        # semicolon anyway cannot be in the end of the expression,
+        # in case it is, error will be raised even before this func
+        yield expr[border:], -1
 
     @staticmethod
     def _get_func(token: Token, argscount: int) -> Token:

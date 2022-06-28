@@ -348,18 +348,18 @@ This example will make sure that after we set a value 0x15 with index 1, it real
 
 ---
 
-#### `sizeof`
+#### `len`
 Semantic:
 ```
-sizeof(mem)
+len(mem)
 ```
-Returns: length of array
+Returns: length of allocated memory
 
 Example:
 ```
 sizeof(malloc(15)) == 15
 ```
-This example will make sure that newly allocated array is length of 15
+This example will make sure that newly allocated memory length is 15
 
 ---
 

@@ -1,4 +1,4 @@
-from typing import List, Union, Callable
+from typing import List, Union, Callable, Tuple
 
 from . import types
 
@@ -13,13 +13,13 @@ class Lexeme:
     It may be: number, literal, operator, lbrace, rbrace
     """
 
-    def __init__(self, typeof: types.LexemeType, value: str, pos: int):
+    def __init__(self, typeof: types.LexemeType, value: str, pos: Tuple[int, int]):
         self.type = typeof
         self.value = value
         self.pos = pos
 
     def __str__(self):
-        return f"{self.type.name}:{self.pos}({repr(self.value)})"
+        return f"{self.type.name}({repr(self.value)})"
 
     __repr__ = __str__
 
@@ -29,7 +29,7 @@ class Token:
                  kind: types.TokenKind,
                  typeof: types.TokenType,
                  value: TokenValue,
-                 pos: int
+                 pos: Tuple[int, int]
                  ):
         self.kind = kind
         self.type = typeof

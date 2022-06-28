@@ -3,9 +3,22 @@ from sys import argv, stdin as _stdin, stdout as _stdout
 
 from std.stdlibrary import stdnamespace
 from pycalc.interpreter import interpret
-from pycalc.tokentypes.types import PyCalcError
+from pycalc.tokentypes.types import PyCalcError, NoCodeError
 
 PROMPT = ">> "
+
+
+def _format_exc(
+        code: str,
+        exc: PyCalcError,
+        file: str = "<anonymous>") -> str:
+    lineno, pos = exc.pos
+    line = code.split("\n")[lineno]
+
+    return f"{line}\n" + \
+           " " * pos + "^\n" \
+           f"{file}:{lineno+1}:{pos+1}: " \
+           f"{exc.__class__.__name__}: {exc}"
 
 
 class InteractiveShell:
@@ -18,10 +31,10 @@ class InteractiveShell:
 
     def session(self, stdin=_stdin, stdout=_stdout):
         while True:
-            self._print(stdout, end=self.prompt)
+            print(end=self.prompt, file=stdout)
 
             try:
-                expression = self._input(stdin)
+                expression = stdin.readline().strip()
             except KeyboardInterrupt:
                 return
 
@@ -29,21 +42,14 @@ class InteractiveShell:
                 continue
 
             try:
-                self._print(stdout, self.interpreter.interpret(expression, stdnamespace))
+                print(self.interpreter.interpret(expression, stdnamespace),
+                      file=stdout)
             except PyCalcError as exc:
-                self._print(stdout, expression)
-                self._print(stdout, " " * exc.pos + "^")
-                self._print(stdout, f"<repl>:0:{exc.pos}: {exc.__class__.__name__}: {exc}")
+                print(_format_exc(expression, exc, file="<repl>"),
+                      file=stdout)
             except Exception as exc:
-                self._print(stdout, f"<repl>:0:?: {exc.__class__.__name__}: {exc}")
-
-    @staticmethod
-    def _input(stdin) -> str:
-        return stdin.readline().rstrip()
-
-    @staticmethod
-    def _print(stdout, *args, **kwargs):
-        print(*args, **kwargs, file=stdout, flush=True)
+                print(f"<repl>:1:?: internal interpreter error: {exc.__class__.__name__}: {exc}",
+                      file=stdout)
 
 
 def interactive_mode():
@@ -59,11 +65,11 @@ def expr_exec_mode(expr: str):
     try:
         print(interpret.Interpreter().interpret(expr, stdnamespace))
     except PyCalcError as exc:
-        print(expr)
-        print(" " * exc.pos + "^")
-        print(f"<cli>:0:{exc.pos}: {exc.__class__.__name__} {exc}")
+        print(_format_exc(expr, exc, file="<cli>"))
+    except NoCodeError:
+        pass
     except Exception as exc:
-        print(f"<cli>:0:?: {exc.__class__.__name__}: {exc}")
+        print(f"<cli>:1:?: internal interpreter error: {exc.__class__.__name__}({repr(exc)})")
 
 
 def script_exec_mode(filename: str):
@@ -72,28 +78,22 @@ def script_exec_mode(filename: str):
         return
 
     try:
-        fd = open(filename)
+        with open(filename) as fd:
+            code = fd.read()
     except FileNotFoundError:
         print("file not found:", filename)
         return
 
     interpreter = interpret.Interpreter()
 
-    with fd:
-        for lineno, line in enumerate(fd, start=1):
-            line = line.strip()
-
-            if line:
-                try:
-                    interpreter.interpret(line, stdnamespace)
-                except PyCalcError as exc:
-                    print(line)
-                    print(" " * exc.pos + "^")
-                    print(f"{fd.name}:{lineno}:{exc.pos}: {exc.__class__.__name__}: {exc}")
-                    return
-                except Exception as exc:
-                    print(f"{fd.name}:{lineno}:?: {exc.__class__.__name__}: {exc}")
-                    return
+    try:
+        interpreter.interpret(code, stdnamespace)
+    except PyCalcError as exc:
+        print(_format_exc(code, exc, file=fd.name))
+    except NoCodeError:
+        pass
+    except Exception as exc:
+        print(f"{fd.name}:?:?: internal interpreter error: {exc.__class__.__name__}({repr(exc)})")
 
 
 if __name__ == '__main__':
