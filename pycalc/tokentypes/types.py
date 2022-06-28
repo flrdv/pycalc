@@ -71,6 +71,7 @@ class TokenType(enum.IntEnum):
     OP_GE = 20
     OP_LT = 21
     OP_LE = 22
+    OP_DOT = 35
     UN_POS = 23
     UN_NEG = 24
     LPAREN = 25
@@ -105,6 +106,8 @@ OPERATORS_TABLE = {
     ">=": TokenType.OP_GE,
     "<": TokenType.OP_LT,
     "<=": TokenType.OP_LE,
+
+    ".": TokenType.OP_DOT,
 
     ";": TokenType.OP_SEMICOLON,
     "=": TokenType.OP_EQ,
@@ -142,6 +145,7 @@ PRIORITIES_TABLE = {
     TokenType.OP_POW:   Priorities.MAXIMAL,
     TokenType.FUNCCALL: Priorities.MAXIMAL,
     TokenType.FUNCDEF:  Priorities.MAXIMAL,
+    TokenType.OP_DOT:   Priorities.MAXIMAL,
 
     TokenType.OP_EQ:        Priorities.NONE,
     TokenType.OP_EQEQ:      Priorities.NONE,

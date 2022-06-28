@@ -81,6 +81,7 @@ class Interpreter(ABCInterpreter):
         TokenType.OP_BITWISE_OR:  operator.or_,
         TokenType.OP_BITWISE_XOR: operator.xor,
 
+        TokenType.OP_DOT:   getattr,
         TokenType.OP_EQEQ:  operator.eq,
         TokenType.OP_NOTEQ: operator.ne,
         TokenType.OP_GT:    operator.gt,
@@ -199,6 +200,9 @@ class Interpreter(ABCInterpreter):
             raise InvalidSyntaxError("multiple values left in stack", stack[0].pos)
 
         return result.value
+
+    def _import(self, path: str):
+        ...
 
     def _spawn_function(self,
                         namespace: NamespaceStack,

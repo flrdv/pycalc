@@ -117,6 +117,23 @@ class Tokenizer(ABCTokenizer):
                     buff.clear()
 
                 yield char, False, pos
+            elif char == ".":
+                if i == len(data)-1:
+                    raise InvalidSyntaxError(
+                        "unexpected dot in the end of the expression",
+                        (lineno, i)
+                    )
+
+                if data[i+1] in string.digits:
+                    buff.append(char)
+                else:
+                    if buff:
+                        yield "".join(buff), state == _LexerState.OPERATOR, i-len(buff)
+                        buff.clear()
+
+                    yield char, True, i
+
+                state = _LexerState.NOT_OPERATOR
             elif state != char_state:
                 if buff:
                     yield "".join(buff), state == _LexerState.OPERATOR, pos
@@ -271,6 +288,10 @@ class Tokenizer(ABCTokenizer):
         empty_stack = Stack()
         funcdef = FuncDef("", [], empty_stack)
         prev_eq_pos = None
+
+        for i, token in enumerate(tokens[1:]):
+            if token.type == TokenType.VAR and tokens[i].type == TokenType.OP_DOT:
+                token.type = TokenType.IDENTIFIER
 
         for i, token in enumerate(tokens[::-1]):
             if state == _ParserState.OTHER:
