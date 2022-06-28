@@ -1,14 +1,20 @@
 import enum
 import string
-from operator import add
-from functools import reduce
 from abc import ABC, abstractmethod
 from typing import List, Iterator, Tuple, Callable
 
 from pycalc.tokentypes.tokens import Lexeme, Lexemes, Token, Tokens, FuncDef
-from pycalc.tokentypes.types import (LexemeType, TokenType, TokenKind,
-                                     OPERATORS_TABLE, UNARY_OPERATORS,
-                                     Stack, InvalidSyntaxError)
+from pycalc.tokentypes.types import (LexemeType, TokenType, TokenKind, OPERATORS_TABLE,
+                                     OPERATORS_CHARS, UNARY_OPERATORS, Stack,
+                                     InvalidSyntaxError)
+
+
+class _LexerState(enum.IntEnum):
+    ANY = 1
+    OPERATOR = 2
+    NOT_OPERATOR = 3
+    STRING = 4
+    STRING_BACKSLASH = 5
 
 
 class _ParserState(enum.IntEnum):
@@ -65,48 +71,74 @@ class Tokenizer(ABCTokenizer):
 
         return output
 
-    @staticmethod
-    def _lex(data: str) -> Iterator[Tuple[str, bool, int]]:
+    def _lex(self, data: str) -> Iterator[Tuple[str, bool, int]]:
         buff: List[str] = []
-        operators_chars = set(reduce(add, OPERATORS_TABLE.keys()))
-        state = None
+        state = _LexerState.ANY
         pos = 0
+        lineno = 0
 
         for i, char in enumerate(data):
-            pos += 1
+            char_state = self._get_lexer_state_for_char(char)
 
-            if state is None:
-                state = char in operators_chars
+            if state == _LexerState.ANY:
+                state = char_state
 
-            if char == " ":
+            if state == _LexerState.STRING:
+                if char == "\"" and buff:
+                    buff.append(char)
+                    yield "".join(buff), False, pos-len(buff)+1
+                    buff.clear()
+                    state = _LexerState.ANY
+                elif char == "\\":
+                    state = _LexerState.STRING_BACKSLASH
+                    buff.append(char)
+                else:
+                    buff.append(char)
+            elif state == _LexerState.STRING_BACKSLASH:
+                buff.append(char)
+                state = _LexerState.STRING
+            elif char == " ":
                 if buff:
-                    yield "".join(buff), state, pos
+                    yield "".join(buff), state == _LexerState.OPERATOR, pos
                     buff.clear()
             elif char == "\n":
                 if buff:
-                    yield "".join(buff), state, pos
+                    yield "".join(buff), state == _LexerState.OPERATOR, pos
                     buff.clear()
 
-                state = None
+                state = _LexerState.ANY
                 pos = 0
+                lineno += 1
                 yield "\n", False, pos
             elif char in "()":
                 if buff:
-                    yield "".join(buff), state, pos
+                    yield "".join(buff), state == _LexerState.OPERATOR, pos-len(buff)
+                    buff.clear()
 
                 yield char, False, pos
-                buff.clear()
-            elif (char in operators_chars) + state == 1:
+            elif state != char_state:
                 if buff:
-                    yield "".join(buff), state, pos
+                    yield "".join(buff), state == _LexerState.OPERATOR, pos
+                    buff.clear()
 
-                buff = [char]
-                state = not state
+                buff.append(char)
+                state = char_state
             else:
                 buff.append(char)
 
+            pos += 1
+
         if buff:
-            yield "".join(buff), state, pos
+            yield "".join(buff), state == _LexerState.OPERATOR, pos+1
+
+    @staticmethod
+    def _get_lexer_state_for_char(char: str) -> _LexerState:
+        if char in OPERATORS_CHARS:
+            return _LexerState.OPERATOR
+        elif char == "\"":
+            return _LexerState.STRING
+
+        return _LexerState.NOT_OPERATOR
 
     @staticmethod
     def _split_lines(lexemes: Lexemes) -> List[Lexemes]:
@@ -387,6 +419,8 @@ class Tokenizer(ABCTokenizer):
             return get_lexeme(LexemeType.RPAREN)
         elif raw_lexeme == "\n":
             return get_lexeme(LexemeType.EOL)
+        elif raw_lexeme[0] == raw_lexeme[-1] == "\"":
+            return get_lexeme(LexemeType.STRING)
 
         return get_lexeme(LexemeType.LITERAL)
 
@@ -448,6 +482,13 @@ class Tokenizer(ABCTokenizer):
                 kind=TokenKind.PAREN,
                 typeof=parentheses[lexeme.type],
                 value=lexeme.value,
+                pos=lexeme.pos
+            )
+        elif lexeme.type == LexemeType.STRING:
+            return Token(
+                kind=TokenKind.STRING,
+                typeof=TokenType.STRING,
+                value=lexeme.value[1:-1],
                 pos=lexeme.pos
             )
 
