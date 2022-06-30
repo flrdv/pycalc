@@ -93,7 +93,8 @@ def script_exec_mode(filename: str):
     except NoCodeError:
         pass
     except Exception as exc:
-        print(f"{fd.name}:?:?: internal interpreter error: {exc.__class__.__name__}({repr(exc)})")
+        print(f"{fd.name}:?:?: internal interpreter error:")
+        raise exc
 
 
 if __name__ == '__main__':
