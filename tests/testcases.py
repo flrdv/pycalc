@@ -150,7 +150,7 @@ class TestVariables(TestCase):
         self.assertEqual(evaluate("a=5+5"), 10)
 
     def test_get_declared_var(self):
-        self.assertEqual(evaluate("a"), 10)
+        self.assertEqual(evaluate("a=10 \n a"), 10)
 
 
 class TestFunctions(TestCase):
@@ -177,12 +177,10 @@ class TestFunctions(TestCase):
         self.assertEqual(func_c.name, "c(x,y)")
 
     def test_def_func_call(self):
-        evaluate("f(x,y)=x*y")
-        self.assertEqual(evaluate("f(2,5)"), 10)
+        self.assertEqual(evaluate("f(x,y)=x*y \n f(2,5)"), 10)
 
     def test_def_func_argexpr(self):
-        evaluate("f(x,y)=x*y")
-        self.assertEqual(evaluate("f(2+5, 3*2)"), 42)
+        self.assertEqual(evaluate("f(x,y)=x*y \n f(2+5, 3*2)"), 42)
 
     def test_funcdef_argexpr(self):
         with self.assertRaises(InvalidSyntaxError):
@@ -205,16 +203,14 @@ class TestFunctions(TestCase):
 
 class TestLambdas(TestCase):
     def test_assign_to_var(self):
-        func = evaluate("a=(x)=x+1")
-        self.assertIsInstance(func, Function)
-        self.assertEqual(evaluate("a(1)"), 2)
+        self.assertEqual(evaluate("a=(x)=x+1 \n a(1)"), 2)
 
     def test_lambda_as_argument(self):
-        sum_func = evaluate("sum(mem)=reduce((x,y)=x+y, mem)")
-        range_func = evaluate("range(begin, end) = i=begin-1; map((x)=i=i+1;x+i, malloc(end-begin))")
-        self.assertIsInstance(sum_func, Function)
-        self.assertIsInstance(range_func, Function)
-        self.assertEqual(evaluate("sum(range(0,5))"), 10)
+        self.assertEqual(evaluate("""
+        sum(mem)=reduce((x,y)=x+y, mem)
+        range(begin, end) = i=begin-1; map((x)=i=i+1;x+i, malloc(end-begin))
+        sum(range(0,5))
+        """), 10)
 
     def test_missing_brace_in_arglambda(self):
         with self.assertRaises(InvalidSyntaxError):
