@@ -24,5 +24,5 @@ def mem_set(mem: List[int], offset: int, value: int) -> int:
     return 0
 
 
-def slice_(mem: List[int], begin: int, offset: int) -> List[int]:
-    return mem[begin:begin+offset]
+def slice_(mem: List[int], begin: int, end: int) -> List[int]:
+    return mem[begin:end]
