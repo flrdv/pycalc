@@ -181,5 +181,9 @@ class UnknownTokenError(PyCalcError):
     pass
 
 
+class ExternalFunctionError(PyCalcError):
+    pass
+
+
 class NoCodeError(Exception):
     pass
