@@ -128,50 +128,53 @@ class SortingStationBuilder(ABCBuilder):
 
     def _count_args(self, tokens: Tokens) -> List[int]:
         result = []
-        skip_rparens = 0
 
-        for i, token in enumerate(tokens[1:]):
-            if skip_rparens:
-                if token.type == TokenType.RPAREN:
-                    skip_rparens -= 1
+        for funccall in self.__find_funccalls(tokens):
+            result.append(0)
+            waitforcomma = False
+            parens = 0
 
-                continue
+            for token in funccall:
+                if parens:
+                    if token.type == TokenType.LPAREN:
+                        parens += 1
+                    elif token.type == TokenType.RPAREN:
+                        parens -= 1
 
-            if token.type == TokenType.LPAREN and tokens[i].type == TokenType.VAR:
-                counters = self.__argscounter(tokens[i+2:])
-                result.extend(counters)
-                skip_rparens = len(counters)
-
-        return result
-
-    def __argscounter(self, tokens: Tokens) -> List[int]:
-        result = [0]
-        skip_rparens = 0
-
-        waitforcomma = False
-
-        for i, token in enumerate(tokens):
-            if skip_rparens:
-                if token.type == TokenType.RPAREN:
-                    skip_rparens -= 1
-
-                continue
-            elif token.type == TokenType.RPAREN:
-                return result
-
-            if waitforcomma:
-                if token.type == TokenType.OP_COMMA:
-                    waitforcomma = False
-            elif token.kind != TokenKind.PAREN:
-                result[0] += 1
-                waitforcomma = True
-
-            if token.type == TokenType.LPAREN:
-                counters = self.__argscounter(tokens[i+1:])
-                result.extend(counters)
-                skip_rparens = len(counters)
+                    continue
+                elif token.type == TokenType.LPAREN:
+                    parens += 1
+                    result[-1] += not waitforcomma
+                    waitforcomma = True
+                elif waitforcomma:
+                    waitforcomma = token.type != TokenType.OP_COMMA
+                else:
+                    result[-1] += 1
+                    waitforcomma = True
 
         return result
+
+    def __find_funccalls(self, tokens: Tokens) -> List[Tokens]:
+        funcs: List[Tokens] = []
+        parens = 0
+
+        for i, token in enumerate(tokens[1:], start=1):
+            if parens:
+                if token.type == TokenType.LPAREN:
+                    parens += 1
+                elif token.type == TokenType.RPAREN:
+                    parens -= 1
+
+                    if not parens:
+                        funcs.extend(self.__find_funccalls(funcs[-1]))
+                        continue
+
+                funcs[-1].append(token)
+            elif token.type == TokenType.LPAREN and tokens[i - 1].type == TokenType.VAR:
+                parens = 1
+                funcs.append([])
+
+        return funcs
 
     @staticmethod
     def _expr_divider(expr: Tokens) -> Iterator[Tuple[Tokens, Tuple[int, int]]]:
