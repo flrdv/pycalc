@@ -18,6 +18,8 @@ stdnamespace = {
     "cbrt": lambda a: a ** (1/3),
     "int": int,
     "float": float,
+    "str": str,
+    "strjoin": str.join,
     "range": range,
     "inv": lambda a: ~a,
     "pi": pi,
@@ -35,7 +37,6 @@ stdnamespace = {
     "set": stdmem.mem_set,
     "slice": stdmem.slice_,
     "len": len,
-    "call": lambda func: func(),
 
     "map": _as_list(map),
     "filter": _as_list(filter),
@@ -43,4 +44,7 @@ stdnamespace = {
     "while": stdstatements.while_,
     "if": stdstatements.if_else,
     "branch": stdstatements.branch,
+
+    "nop": lambda: 0,
+    "call": lambda func: func(),
 }

@@ -231,10 +231,13 @@ class Tokenizer(ABCTokenizer):
                 output.append(token)
 
         if buffer:
-            raise InvalidSyntaxError(
-                "unexpected operator in the end of the expression",
-                buffer[-1].pos
-            )
+            if len(buffer) == 1 and buffer[0].type == TokenType.OP_SEMICOLON:
+                output.append(buffer.pop())
+            else:
+                raise InvalidSyntaxError(
+                    "unexpected operator in the end of the expression",
+                    buffer[-1].pos
+                )
 
         return output
 

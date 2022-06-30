@@ -72,6 +72,34 @@ float(".5") == .5
 
 ---
 
+## `str`
+Semantic:
+```
+str(15.5)
+```
+Returns: string
+
+Examples:
+```
+str(.5) == "0.5"
+```
+
+---
+
+## `strjoin`
+Semantic:
+```
+strjoin(separator, mem)
+```
+Returns: single string
+
+Examples:
+```
+strjoin(".", "123") == "1.2.3"
+```
+
+---
+
 ## `range`
 Semantic:
 ```
