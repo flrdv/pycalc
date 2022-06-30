@@ -8,7 +8,8 @@ from pycalc.stack import builder
 from pycalc.tokentypes.tokens import Token, Tokens, Function
 from pycalc.tokentypes.types import (TokenKind, TokenType, Stack, Namespace, Number,
                                      NamespaceValue, ArgumentsError, NameNotFoundError,
-                                     InvalidSyntaxError, NoCodeError)
+                                     InvalidSyntaxError, ExternalFunctionError,
+                                     PyCalcError, NoCodeError)
 
 
 Value = Union[Number, Function]
@@ -107,7 +108,10 @@ class Interpreter(ABCInterpreter):
         tokens = self.tokenizer.tokenize(code)
         stacks = self.stackbuilder.build(tokens)
         namespaces = NamespaceStack()
-        namespaces.add_namespace(namespace)
+        # empty namespace especially for global namespace
+        # because default one must not be overridden by
+        # global namespace of code
+        namespaces.add_namespaces(namespace, {})
 
         return self._interpreter(stacks, namespaces)
 
@@ -164,14 +168,15 @@ class Interpreter(ABCInterpreter):
                     call_result = func(*(arg.value for arg in args))
                 except ArgumentsError as exc:
                     raise ArgumentsError(str(exc), token.pos) from None
+                except PyCalcError as exc:
+                    raise exc from None
+                except Exception as exc:
+                    raise ExternalFunctionError(str(exc), token.pos)
 
                 stack.append(self._token(call_result, token.pos))
             elif token.type == TokenType.FUNCDEF:
-                func_namespace = namespaces.copy()
-                func_namespace.add_namespace({})
-
                 func = self._spawn_function(
-                    namespace=func_namespace,
+                    namespace=namespaces.copy(),
                     name=token.value.name,
                     fargs=[tok.value for tok in token.value.args],
                     body=token.value.body
@@ -201,9 +206,6 @@ class Interpreter(ABCInterpreter):
 
         return result.value
 
-    def _import(self, path: str):
-        ...
-
     def _spawn_function(self,
                         namespace: NamespaceStack,
                         name: str,
@@ -212,7 +214,7 @@ class Interpreter(ABCInterpreter):
         def real_function(*args) -> Number:
             if not fargs and args:
                 raise ArgumentsError("function takes no arguments", (-1, -1))
-            if len(fargs) != len(args):
+            elif len(fargs) != len(args):
                 text = (
                     "not enough arguments",
                     "too much arguments"
@@ -229,7 +231,7 @@ class Interpreter(ABCInterpreter):
                 return self._interpret_line(body, namespace)
 
         return Function(
-            name=f"{name}({','.join(fargs)})",
+            name=f"{name or '<lambda>'}({','.join(fargs)})",
             target=real_function
         )
 
