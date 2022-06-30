@@ -1,0 +1,46 @@
+rulesMap(func, rules) =
+    map(
+        (x) = func(slice(rules, x, x+5)),
+        range(0, len(rules), 5)
+    )
+
+step(tape, rules, state, position) =
+    char = get(tape, position);
+    selectedRule = 0;
+    rulesMap(
+        (rule) = if(
+            (get(rule, 0) == state) + (get(rule, 1) == char) == 2,
+            () = selectedRule = rule
+        ),
+        rules
+    );
+    set(tape, position, get(selectedRule, 3));
+    moveHead = get(selectedRule, 4);
+    branch(
+        moveHead == 2,
+        () = position = position + 1,
+        moveHead == 1,
+        () = position = position - 1,
+    );
+    mallocfor(get(selectedRule, 2), position)
+
+
+rules = mallocfor(
+    1, ord("0"), 1, ord("1"), 2,
+    1, ord("1"), 1, ord("0"), 2,
+    1, ord("*"), 2, ord("*"), 1
+)
+tape = map(ord, "010011001*")
+println("tape was: ", strjoin("", map(chr, tape)))
+
+state = 1
+position = 0
+while(
+    () = state != 2,
+    () =
+        result = step(tape, rules, state, position);
+        state = get(result, 0);
+        position = get(result, 1)
+)
+
+println("tape became: ", strjoin("", map(chr, tape)))
