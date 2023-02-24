@@ -20,7 +20,10 @@ jobs:
           pip install -r requirements.txt
           pip install pytest
           pip install pylint
+          pip install black
       - name: Run tests
         run: pytest tests/testcases.py
       - name: Run pylint
         run: pylint std/stdio.py
+      - name: run Black
+        run: black std/stdio.py
