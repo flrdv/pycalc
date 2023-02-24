@@ -11,4 +11,5 @@ jobs:
       - uses: actions/checkout@v2
       - name: Test
         run: |
-          echo "Test"
+          #run test cases file
+          python ./tests/testcases.py
