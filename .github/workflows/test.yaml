@@ -19,7 +19,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest
-          pip install pylint pylint-yaml
+          pip install pylint
       - name: Run tests
         run: pytest tests/testcases.py
       - name: Run pylint
