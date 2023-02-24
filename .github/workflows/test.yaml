@@ -29,15 +29,6 @@ jobs:
         run: pylint std/stdio.py
       - name: run Black
         run: black std/stdio.py
-      - name: Merge to master branch
-        if: ${{ success() }}
-        
-        uses: peter-evans/create-pull-request@v3
-        with:
-          token: ${{ secrets.ACCESS_TOKEN }}
-          branch: master
-          commit-message: "Oheed Branch code incoming"
-          title: "push from oheed"
-          body: "This is an automated pull request created by GitHub Actions."r
+      
 
 
