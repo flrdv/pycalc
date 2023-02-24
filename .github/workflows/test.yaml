@@ -29,9 +29,9 @@ jobs:
         run: black std/stdio.py
       - name: Push to master
         if: success()
-        uses: stefanzweifel/git-auto-commit-action@v4
+        uses: ad-m/github-push-action@master
         with:
-          commit_message: "Auto-commit after passing tests and code quality checks"
-          commit_options: '--no-verify'
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: master
+
 
