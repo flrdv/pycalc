@@ -29,30 +29,29 @@ def println_(*values) -> int:
     return 0
 
 
-def print_mem(mem: List) -> int:
+def print_mem(memory: List) -> int:
     """
     Prints the contents of the given memory list to the console without a newline.
 
     Args:
-        mem (List): The memory list to print.
+        memory (List): The memory list to print.
 
     Returns:
         int: Always returns 0.
     """
-    print(*mem, sep="", end="")
+    print(*memory, sep="", end="")
     return 0
 
 
-def println_mem(mem: List) -> int:
+def println_mem(memory: List) -> int:
     """
     Prints the contents of the given memory list to the console with a newline.
 
     Args:
-        mem (List): The memory list to print.
+        memory (List): The memory list to print.
 
     Returns:
         int: Always returns 0.
     """
-    print(*mem, sep="", end="\n")
+    print(*memory, sep="", end="\n")
     return 0
-
