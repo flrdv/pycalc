@@ -29,15 +29,15 @@ jobs:
         run: pylint std/stdio.py
       - name: run Black
         run: black std/stdio.py
-      #if success then push to master
-      - name: Push to master
-        if: success()
+      - name: Merge to Master
+        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
         run: |
           git config --global user.email "oheedimran@outlook.com"
-          git config --global user.name "Oheed"
-          git checkout master
-          git merge oheed
+          git config --global user.name "Oheed911"
+          git fetch --prune --unshallow
+          git merge --no-ff --no-edit origin/main $(git branch --format='%(refname:short)' --merged | grep -v 'main$' | grep -v 'master$')
           git push origin master
+
 
 
 
