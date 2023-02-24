@@ -2,9 +2,9 @@ name: Security Analysis
 
 on:
   push:
-    branches: [main]
+    branches: oheed
   pull_request:
-    branches: [main]
+    branches: oheed
 
 jobs:
   security:
