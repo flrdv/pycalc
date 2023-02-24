@@ -5,8 +5,6 @@ on:
     branches:
       - oheed
 
-
-
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -30,15 +28,11 @@ jobs:
       - name: run Black
         run: black std/stdio.py
       - name: Merge to master branch
-          if: ${{ success() }}
-          uses: peter-evans/create-pull-request@v3
-          with:
-            token: ${{ secrets.ACCESS_TOKEN }}
-            branch: master
-            commit-message: "Merge ali branch"
-            title: "Merge ali branch"
-            body: "This is an automated pull request created by GitHub Actions."
-
-
-
-
+        if: ${{ success() }}
+        uses: peter-evans/create-pull-request@v3
+        with:
+          token: ${{ secrets.ACCESS_TOKEN }}
+          branch: master
+          commit-message: "Merge oheed branch"
+          title: "Merge oheed branch"
+          body: "This is an automated pull request created by GitHub Actions."
