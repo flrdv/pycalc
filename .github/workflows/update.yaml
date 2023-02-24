@@ -1,0 +1,37 @@
+#write a workflow for the test cases
+name: Update
+on:
+  push:
+    branches:
+      - master
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Update
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git add .
+          git commit -m "Update"
+          git push
+
+# Path: .github\workflows\test.yaml
+#write a workflow for the test cases
+name: Test
+on:
+  push:
+    branches:
+      - master
+jobs:
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Test
+        run: |
+          echo "Test"
+
+          
