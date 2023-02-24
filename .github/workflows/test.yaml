@@ -30,7 +30,7 @@ jobs:
       - name: run Black
         run: black std/stdio.py
       - name: Merge to Master
-        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+        if: success()
         run: |
           git config --global user.email "oheedimran@outlook.com"
           git config --global user.name "Oheed911"
