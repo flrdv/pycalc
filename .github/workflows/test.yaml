@@ -33,11 +33,11 @@ jobs:
       - name: Push to master
         if: success()
         run: |
-          git config --global user.email "
+          git config --global user.email "oheedimran@outlook.com"
           git config --global user.name "Oheed"
           git checkout master
           git merge oheed
           git push origin master
-          
+
 
 
