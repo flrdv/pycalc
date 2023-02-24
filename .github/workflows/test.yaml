@@ -29,6 +29,15 @@ jobs:
         run: pylint std/stdio.py
       - name: run Black
         run: black std/stdio.py
-      
+      #if success then push to master
+      - name: Push to master
+        if: success()
+        run: |
+          git config --global user.email "
+          git config --global user.name "Oheed"
+          git checkout master
+          git merge oheed
+          git push origin master
+          
 
 
