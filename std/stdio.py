@@ -1,5 +1,5 @@
 """
-This module contains functions for printing to the console without a newline, printing to the console with a newline, and printing the contents of a list to the console. These functions are useful for debugging and logging purposes.
+This module contains functions for printing to the console without a newline.
 """
 from typing import List
 
