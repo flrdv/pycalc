@@ -5,7 +5,7 @@ on:
     branches:
       - oheed
 
-      
+
 
 jobs:
   test:
@@ -31,6 +31,7 @@ jobs:
         run: black std/stdio.py
       - name: Merge to master branch
         if: ${{ success() }}
+        
         uses: peter-evans/create-pull-request@v3
         with:
           token: ${{ secrets.ACCESS_TOKEN }}
