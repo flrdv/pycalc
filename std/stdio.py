@@ -2,24 +2,57 @@ from typing import List
 
 
 def print_(*values) -> int:
-    print(*values, sep="", end="")
+    """
+    Prints the given values to the console without a newline.
 
+    Args:
+        *values: The values to print.
+
+    Returns:
+        int: Always returns 0.
+    """
+    print(*values, sep="", end="")
     return 0
 
 
 def println_(*values) -> int:
-    print(*values, sep="", end="\n")
+    """
+    Prints the given values to the console with a newline.
 
+    Args:
+        *values: The values to print.
+
+    Returns:
+        int: Always returns 0.
+    """
+    print(*values, sep="", end="\n")
     return 0
 
 
 def print_mem(mem: List) -> int:
-    print(*mem, sep="", end="")
+    """
+    Prints the contents of the given memory list to the console without a newline.
 
+    Args:
+        mem (List): The memory list to print.
+
+    Returns:
+        int: Always returns 0.
+    """
+    print(*mem, sep="", end="")
     return 0
 
 
 def println_mem(mem: List) -> int:
-    print(*mem, sep="", end="\n")
+    """
+    Prints the contents of the given memory list to the console with a newline.
 
+    Args:
+        mem (List): The memory list to print.
+
+    Returns:
+        int: Always returns 0.
+    """
+    print(*mem, sep="", end="\n")
     return 0
+
