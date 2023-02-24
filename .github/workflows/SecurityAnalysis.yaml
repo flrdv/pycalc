@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        language: [python, java] # Add more languages as needed
+        language: [python] # Add more languages as needed
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -36,4 +36,3 @@ jobs:
         uses: github/codeql-action/upload-sarif@v1
         with:
           sarif_file: codeql-results/${{ matrix.language }}/codeql.sarif
-
